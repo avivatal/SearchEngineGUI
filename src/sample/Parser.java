@@ -23,7 +23,7 @@ public class Parser {
         months.put("January", "01");months.put("February","02");months.put("March","03");months.put("April","04");months.put("June","06");months.put("July","07");months.put("August","08");months.put("September","09");months.put("October","10");months.put("November","11");months.put("December","12");
         months.put("JAN", "01");months.put("FEB","02");months.put("MAR","03");months.put("APR","04");months.put("MAY","05");months.put("JUN","06");months.put("JUL","07");months.put("AUG","08");months.put("SEP","09");months.put("OCT","10");months.put("NOV","11");months.put("DEC","12");
         months.put("JANUARY", "01");months.put("FEBRUARY","02");months.put("MARCH","03");months.put("APRIL","04");months.put("JUNE","06");months.put("JULY","07");months.put("AUGUST","08");months.put("SEPTEMBER","09");months.put("OCTOBER","10");months.put("NOVEMBER","11");months.put("DECEMBER","12");
-        regex=Pattern.compile("\\-+|\\s+|\\\n+|\\(+|\\)+|\\;+|\\:+|\\?+|\\!+|\\<+|\\>+|\\}+|\\{+|\\]+|\\[+|\\*+|\\++|\\|+|\\\"+|\\=+|\\#+|\\\\+");
+        regex=Pattern.compile("\\-+|\\s+|\\\n+|\\(+|\\)+|\\;+|\\:+|\\?+|\\!+|\\<+|\\>+|\\}+|\\{+|\\]+|\\[+|\\*+|\\++|\\|+|\\\"+|\\=+|\\#+|\\`+|\\\\+");
     }
 
     public HashMap<String, ArrayList<String>> getParsedDocs() {
@@ -278,11 +278,11 @@ public class Parser {
                     //***********END DATES CHECK*****************
 
                     //***********NUMBERS***************
-                    else if (isNumeric(splitedStringj)) {
+                    else if (isNumeric(splitedStringj) || isDecimal(splitedStringj)) {
 
                         //is decimal number
                         if (splitedStringj.contains(".")) {
-                            try {
+                        /*    try {
                                 BigDecimal bd = new BigDecimal(splitedStringj);
                                 bd = bd.setScale(2, RoundingMode.HALF_UP);
                                 splited[j] = bd.toString();
@@ -291,7 +291,11 @@ public class Parser {
                             } catch (NumberFormatException e) {
                                 e.printStackTrace();
                                 System.out.println("PROBLEM: " + splitedStringj); //////////delete
-                            }
+                            }*/
+                            splited[j] = round(splitedStringj);
+                            splitedStringj = splited[j];
+                            splitedj = splitedStringj.length();
+
                             //if second decimal digit is zero, remove it
                             try {
                                 if (splitedStringj.endsWith("0") && splitedj > 1) {
@@ -311,7 +315,7 @@ public class Parser {
                             j++;
                         }
                         //number without percent
-                        else {
+                        else{
                             parsedDocs.get(i).add(splitedStringj);
                         }
                     }
@@ -322,7 +326,7 @@ public class Parser {
                         splitedj--;
                         //is decimal
                         if (splitedStringj.contains(".") && isNumeric(splitedStringj)) {
-                            try {
+                          /*  try {
                                 BigDecimal bd = new BigDecimal(splitedStringj);
                                 bd = bd.setScale(2, RoundingMode.HALF_UP);
                                 splited[j] = bd.toString();
@@ -331,7 +335,10 @@ public class Parser {
                             } catch (NumberFormatException e) {
                                 e.printStackTrace();
                                 System.out.println("PROBLEM: " + splitedStringj); //delete!
-                            }
+                            }*/
+                            splited[j]=round(splitedStringj);
+                            splitedStringj = splited[j];
+                            splitedj = splitedStringj.length();
                             //ends with zero - remove it
                             if (splitedStringj.endsWith("0")) {
                                 splited[j] = splitedStringj.substring(0, splitedj - 1);
@@ -351,15 +358,16 @@ public class Parser {
                         tempNoCommas = tempNoCommas.replaceAll(",", "");
                         if (isNumeric(tempNoCommas)) {
                             //decimal
-                            if (tempNoCommas.contains(".") && isNumeric(tempNoCommas)) {
-                                try {
+                            if (tempNoCommas.contains(".") && isDecimal(tempNoCommas)) {
+                                /*try {
                                     BigDecimal bd = new BigDecimal(tempNoCommas);
                                     bd = bd.setScale(2, RoundingMode.HALF_UP);
                                     tempNoCommas = bd.toString();
                                 } catch (Exception e) {
                                     System.out.println(tempNoCommas);
                                     e.printStackTrace();
-                                }
+                                }*/
+                                tempNoCommas=round(tempNoCommas);
                             }
                             parsedDocs.get(i).add(tempNoCommas);
                         }
@@ -386,7 +394,7 @@ public class Parser {
     {
         try
         {
-            double d = Double.parseDouble(str);
+            int d = Integer.parseInt(str);
         }
         catch(NumberFormatException nfe)
         {
@@ -426,21 +434,52 @@ public class Parser {
             if (s.endsWith("'s") || s.endsWith("'S")) {
                 s = s.substring(0, s.length() - 2);
             }
-            if (isNumeric(s)) {
+      /*      if (isNumeric(s)) {
                 if (s.endsWith("f") || s.endsWith("d") || s.endsWith("D") || s.endsWith("F")) {
                     s = s.substring(0, s.length() - 1);
                 }
                 if (s.endsWith(".d") || s.endsWith(".D")) {
                     s = s.substring(0, s.length() - 2);
-                }
+                }*/
 
-            }
+         //   }
         }
         if(whitespaces.contains(s)){
             s="";
         }
         return s;
     }
+
+    private String round(String s){
+        int dot = s.indexOf('.');
+        String first = s.substring(0,dot);
+        String sec=s.substring(dot+1);
+        int finScnd=0;
+        if(sec.length()>2){
+
+            if(sec.charAt(2)>5){
+                finScnd = (Integer.parseInt(sec.charAt(1)+"")+1);
+            }
+            else{
+                finScnd=(Integer.parseInt(sec.charAt(1)+""));
+            }
+            return first+"."+sec.charAt(0)+finScnd+"";
+        }
+        return s;
+    }
+
+    private boolean isDecimal(String str){
+        try
+        {
+            double d = Double.parseDouble(str);
+        }
+        catch(NumberFormatException nfe)
+        {
+            return false;
+        }
+        return true;
+    }
+
 
 }
 

@@ -1,57 +1,99 @@
 package sample;
+import java.io.Serializable;
 import java.util.*;
 
-public class Cache {
+public class Cache implements Serializable {
 
-    //TreeMap<TermInDoc, String> sortedTermsInDoc;
-    PriorityQueue<CacheRecord> sortedTermsInDoc;
+
+    PriorityQueue<TermInDictionairy> queue;
     HashMap<String, HashSet<TermInDoc>> cache;
 
     public Cache() {
-        sortedTermsInDoc = new PriorityQueue<>();
         cache=new HashMap<>();
+
     }
 
-    public void addToCache(Map.Entry<String, HashMap<String,TermInDoc>> entry){
-
+    //get 10000 most popular words in corpus. Sorted by words that appear in the most amount of docs in corpus.
+    public void addDictionairy(HashMap<String,TermInDictionairy> dictionairy){
         int maxCacheSize = 10000;
 
-        for(TermInDoc termInDoc : (entry.getValue()).values()){
-            //sorts by termInDocs tf value
-            sortedTermsInDoc.add(new CacheRecord(entry.getKey(),termInDoc));
-
-            //saves for each term the most relevant posting record
-            if(cache.get(entry.getKey())!=null){
-                cache.get(entry.getKey()).add(termInDoc);
-            }
-            else{
-                cache.put(entry.getKey(),new HashSet<TermInDoc>());
-                cache.get(entry.getKey()).add(termInDoc);
-            }
-
-            //if max cache size exceeded, remove posting record with lowest tf
-           while(cache.size()>maxCacheSize){
-                CacheRecord lowestTf = sortedTermsInDoc.poll(); //removes from sortedTermsInDoc
-
-               //remove from cache
-               //if removing the last record for the term, delete the term from the list
-               if(cache.get(lowestTf.getTerm()).size()==1){
-                   cache.remove(lowestTf.getTerm());
-               }
-               //not removing the last record, remove only the record
-               else if(lowestTf!=null) {
-                   cache.get(lowestTf.getTerm()).remove(lowestTf.getTermInDoc()); //removes from cache PROBLEMMMMMMMMMMMMMMMMMMM
-               }
-           }
+        queue = new PriorityQueue<>(dictionairy.values());
+        while(queue.size()>maxCacheSize){
+            queue.poll();
         }
     }
+
+
+
+    //string to posting records in cache
+    public void getLine(String postingLine) {
+        String term = postingLine.substring(0, postingLine.indexOf(':'));
+
+        //if the word is one of the 10000 most popular words in corpus
+        if (queue.contains(new TermInDictionairy(term))) {
+            PriorityQueue<TermInDoc> sortedTermsInDoc = new PriorityQueue<>();
+            String line = postingLine.substring(postingLine.indexOf(':') + 3);
+
+            //take all posting lines and tranform to termInDocs
+            char[] charsInLine = line.toCharArray();
+            TermInDoc tid=null;
+            for (int i = 0; i < charsInLine.length; i++) {
+
+                if (charsInLine[i] == '(') {
+                    tid = new TermInDoc("null", 0, false);
+                    i++;
+                    //docID
+                    StringBuilder docID = new StringBuilder();
+                    while (charsInLine[i] != ' ') {
+                        docID.append(charsInLine[i]);
+                        i++;
+                    }
+                    tid.setDocId(docID.toString());
+                    StringBuilder tf = new StringBuilder();
+                    i++;
+                    //tf
+                    while (charsInLine[i] != ' ') {
+                        tf.append(charsInLine[i]);
+                        i++;
+                    }
+                    tid.updateTf(Integer.parseInt(tf.toString()));
+                    i++;
+                    //in first 100 words in doc
+                    if (charsInLine[i] == 'f') {
+                        tid.setInFirst100Terms(false);
+                        i += 6;
+                    } else if (charsInLine[i] == 't') {
+                        tid.setInFirst100Terms(true);
+                        i += 5;
+                    }
+                    if (i > charsInLine.length)
+                        break;
+
+                }
+                if(tid!=null){
+                sortedTermsInDoc.add(tid);
+                }
+            }
+
+            //take only 25% of the posting records - with the highest tf
+            double maxRecordsForTerm = Math.ceil(sortedTermsInDoc.size() / 4.0);
+            HashSet<TermInDoc> postingsForCache =  new HashSet<>();
+            for(int i=0; i<maxRecordsForTerm; i++){
+                postingsForCache.add(sortedTermsInDoc.poll());
+            }
+
+            //add to cache
+            cache.put(term,postingsForCache);
+        }
+    }
+
+
+
+
+
 
     //cache is map of <term, list of termInDocs> - only relevant termInDocs
     public HashMap<String, HashSet<TermInDoc>> getCache() {
         return cache;
-    }
-
-    public PriorityQueue<CacheRecord> getSortedTermsInDoc() {
-        return sortedTermsInDoc;
     }
 }

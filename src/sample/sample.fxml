@@ -14,9 +14,10 @@
 
 <GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1">
   <columnConstraints>
-      <ColumnConstraints hgrow="SOMETIMES" maxWidth="429.0" minWidth="10.0" prefWidth="198.0" />
-    <ColumnConstraints hgrow="SOMETIMES" maxWidth="429.0" minWidth="10.0" prefWidth="180.0" />
-    <ColumnConstraints hgrow="SOMETIMES" maxWidth="451.0" minWidth="10.0" prefWidth="222.0" />
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="429.0" minWidth="10.0" prefWidth="208.0" />
+    <ColumnConstraints hgrow="SOMETIMES" maxWidth="429.0" minWidth="10.0" prefWidth="157.0" />
+    <ColumnConstraints hgrow="SOMETIMES" maxWidth="451.0" minWidth="10.0" prefWidth="72.0" />
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="451.0" minWidth="10.0" prefWidth="163.0" />
   </columnConstraints>
   <rowConstraints>
       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -29,12 +30,12 @@
    <children>
       <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
          <children>
-            <TextField prefHeight="26.0" prefWidth="305.0">
+            <TextField fx:id="corpBrowse" prefHeight="26.0" prefWidth="170.0">
                <VBox.margin>
                   <Insets bottom="10.0" left="10.0" />
                </VBox.margin>
             </TextField>
-            <TextField>
+            <TextField fx:id="destBrowse">
                <VBox.margin>
                   <Insets bottom="10.0" left="10.0" />
                </VBox.margin>
@@ -97,10 +98,52 @@
             <Font name="System Bold" size="18.0" />
          </font>
       </Text>
-      <Button fx:id="dictB" onAction="#displayDictionairy" mnemonicParsing="false" text="Display Dictionairy" GridPane.rowIndex="5">
+      <Button fx:id="dictB" mnemonicParsing="false" onAction="#displayDictionairy" text="Display Dictionairy" GridPane.rowIndex="5">
          <GridPane.margin>
             <Insets left="10.0" />
          </GridPane.margin>
       </Button>
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="3" GridPane.rowIndex="4">
+         <children>
+            <Button fx:id="load" mnemonicParsing="false" onAction="#load" text="Load Cache &amp; Dictionairy">
+               <VBox.margin>
+                  <Insets bottom="10.0" left="10.0" />
+               </VBox.margin>
+            </Button>
+            <Button fx:id="save" mnemonicParsing="false" onAction="#save" text="Save Cache &amp; Dictionairy">
+               <VBox.margin>
+                  <Insets left="10.0" />
+               </VBox.margin>
+            </Button>
+         </children>
+      </VBox>
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
+         <children>
+            <TextField fx:id="loadtxt" prefHeight="26.0" prefWidth="305.0">
+               <VBox.margin>
+                  <Insets bottom="10.0" left="10.0" />
+               </VBox.margin>
+            </TextField>
+            <TextField fx:id="savetxt">
+               <VBox.margin>
+                  <Insets bottom="10.0" left="10.0" />
+               </VBox.margin>
+            </TextField>
+         </children>
+      </VBox>
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="2" GridPane.rowIndex="4">
+         <children>
+            <Button fx:id="browseload" mnemonicParsing="false" onAction="#browseload" text="Browse">
+               <VBox.margin>
+                  <Insets bottom="10.0" left="10.0" />
+               </VBox.margin>
+            </Button>
+            <Button fx:id="browsesave" mnemonicParsing="false" onAction="#browsesave" text="Browse">
+               <VBox.margin>
+                  <Insets left="10.0" />
+               </VBox.margin>
+            </Button>
+         </children>
+      </VBox>
    </children>
 </GridPane>

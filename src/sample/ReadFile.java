@@ -13,10 +13,25 @@ public class ReadFile
 {
     Control ctrl;
     Pattern regex;
+    String stopwordsPath;
+    String destinationDirectory;
 
-    public ReadFile(String stopwordsPath, String destinationDirectory) {
-        ctrl = new Control(stopwordsPath, destinationDirectory);
+    public ReadFile() {
+
         regex = Pattern.compile("<DOC>");
+        ctrl=new Control();
+    }
+
+    public void setStopwordsPath(String stopwordsPath){
+        this.stopwordsPath=stopwordsPath;
+    }
+
+    public void setDestinationDirectory(String destinationDirectory){
+        this.destinationDirectory=destinationDirectory;
+    }
+
+    public void setCtrl(){
+        ctrl.setPaths(stopwordsPath, destinationDirectory);
     }
 
     public void read(String corpusPath) throws FileNotFoundException{
@@ -27,9 +42,9 @@ public class ReadFile
         File[] listOfFiles = corpusFolder.listFiles();
         int corpusSize = listOfFiles.length;
 
-        while(counter<1){
+        while(counter<3){
             documents.clear();
-            for(int i=0; i<100 && counter<corpusSize; i++){
+            for(int i=0; i<2 && counter<corpusSize; i++){
                 try {
                     String path = listOfFiles[counter].getPath() + "/" + listOfFiles[counter].getName();
                     BufferedReader br = new BufferedReader(new FileReader(path));
@@ -58,10 +73,10 @@ public class ReadFile
             ctrl.control(documents);
             System.out.println("done "+counter);
         }
+        ctrl.calcCache();
         ctrl.merge();
 
     }
-
 
 }
 

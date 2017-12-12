@@ -1,5 +1,8 @@
 package sample;
-public class TermInDoc implements Comparable {
+
+import java.io.Serializable;
+
+public class TermInDoc implements Comparable, Serializable {
 
     String DocId;
     int tf;
@@ -25,6 +28,10 @@ public class TermInDoc implements Comparable {
 
     public void setTf() {
         tf++;
+    }
+
+    public void updateTf(int newtf){
+        tf=newtf;
     }
 
     public boolean isInFirst100Terms() {
@@ -54,6 +61,6 @@ public class TermInDoc implements Comparable {
     @Override
     //compared 2 term is doc records according to their TF (smaller tf -> bigger object)
     public int compareTo(Object o) {
-        return tf-((TermInDoc)o).getTf();
+        return ((TermInDoc)o).getTf()-tf;
     }
 }

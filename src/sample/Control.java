@@ -16,10 +16,14 @@ public class Control {
     HashMap<String,String> documentProperties;
     String destinationDirectory;
 
-    Control(String stopwordsPath, String destinationDirectory) {
+    Control() {
         parser = new Parser();
         stemmer = new Stemmer();
         indexer = new Indexer(destinationDirectory);
+
+    }
+
+    public void setPaths(String stopwordsPath, String destinationDirectory){
         this.destinationDirectory=destinationDirectory;
         documentProperties=new HashMap<>();
         try {
@@ -32,7 +36,7 @@ public class Control {
             }
             br.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            //     e.printStackTrace();
         }
     }
 
@@ -125,4 +129,6 @@ public class Control {
     public void merge(){
         indexer.mergeTempPostings();
     }
+
+    public void calcCache() { indexer.sendDictionairyToCache(); }
 }

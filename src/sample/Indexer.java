@@ -11,7 +11,6 @@ import java.util.*;
 public class Indexer {
 
 
-
     HashMap<String,TermInDictionairy> dictionairy;
     int numberOfTempPostingFiles=0;
     Cache cache;
@@ -33,20 +32,23 @@ public class Indexer {
 
             //if word doesnt appear in dictionairy - add it
             if(!dictionairy.containsKey(entry.getKey())){
-                dictionairy.put(entry.getKey(),new TermInDictionairy());
+                dictionairy.put(entry.getKey(),new TermInDictionairy(entry.getKey()));
+                dictionairy.get(entry.getKey()).setNumberOfDocumentsOccuresIn(entry.getValue().size());
+
             }
-            //word is in dictionairy - update numberOfAppearancesInCorpus
+            //word is in dictionairy - update totalOccurencesInCorpus
             else{
-                dictionairy.get(entry.getKey()).setNumberOfAppearancesInCorpus();
+                dictionairy.get(entry.getKey()).setTotalOccurencesInCorpus();
+                dictionairy.get(entry.getKey()).setNumberOfDocumentsOccuresIn(entry.getValue().size());
             }
 
             //add to cache
-            cache.addToCache(entry);
+            //    cache.addToCache(entry);
         }
         //add pointers from dictionairy to cache
-        for(String termInCache : cache.getCache().keySet()){
+   /*     for(String termInCache : cache.getCache().keySet()){
             dictionairy.get(termInCache).setPointerToTermInCache(cache.getCache().get(termInCache));
-        }
+        }*/
 
 
         //temp posting file
@@ -80,8 +82,12 @@ public class Indexer {
     }
 
     private String mergeSameTerm(String first, String second){
-        first+= second.substring(second.indexOf(": ")+1);
+        first+= second.substring(second.indexOf(": ")+2);
         return first;
+    }
+
+    public void sendDictionairyToCache(){
+        cache.addDictionairy(dictionairy);
     }
 
     //iterates over the temporary posting files and merges them into final posting files using merge sort.
@@ -114,17 +120,17 @@ public class Indexer {
         int ans=0;
 
         try {
-        //check if uneven - only rename the last file to the last counter of this iteration
-        if((endIndex-startIndex)%2==0){
-            int lastFileIndex = nextcounter+((endIndex-startIndex)/2);
-            Path source = Paths.get(destinationDirectory+"/"+endIndex+".txt");
-            Files.move(source, source.resolveSibling(destinationDirectory+"/"+lastFileIndex+".txt"));
-            endIndex--;
-            ans++;
+            //check if uneven - only rename the last file to the last counter of this iteration
+            if((endIndex-startIndex)%2==0){
+                int lastFileIndex = nextcounter+((endIndex-startIndex)/2);
+                Path source = Paths.get(destinationDirectory+"/"+endIndex+".txt");
+                Files.move(source, source.resolveSibling(destinationDirectory+"/"+lastFileIndex+".txt"));
+                endIndex--;
+                ans++;
 
-        }
+            }
 
-        //haven't finished this iteration
+            //haven't finished this iteration
             while (currentIndex < endIndex) {
 
                 //create new file
@@ -220,14 +226,18 @@ public class Indexer {
                 if(line1.length()>0 && line2.length()>0 && line1.contains(":") && line2.contains(":")) {
                     if (line1.substring(0, line1.indexOf(":")).compareTo(line2.substring(0, line2.indexOf(":"))) < 0) {
                         writer.println(line1);
+                        cache.getLine(line1);
                         updatePointerToPosting(line1.substring(0, line1.indexOf(":")), lineCounter++);
                         line1 = reader1.readLine();
                     } else if (line1.substring(0, line1.indexOf(":")).compareTo(line2.substring(0, line2.indexOf(":"))) > 0) {
                         writer.println(line2);
+                        cache.getLine(line2);
                         updatePointerToPosting(line2.substring(0, line2.indexOf(":")), lineCounter++);
                         line2 = reader2.readLine();
                     } else if (line1.substring(0, line1.indexOf(":")).compareTo(line2.substring(0, line2.indexOf(":"))) == 0) {
-                        writer.println(mergeSameTerm(line1, line2));
+                        String merged=mergeSameTerm(line1, line2);
+                        writer.println(merged);
+                        cache.getLine(merged);
                         updatePointerToPosting(line1.substring(0, line1.indexOf(":")), lineCounter++);
                         line1 = reader1.readLine();
                         line2 = reader2.readLine();
@@ -239,12 +249,14 @@ public class Indexer {
             //IF REACHED THE END OF THE NON LETTERS IN ONLY ONE OF THE FILES - WRITE THE REST OF THE NEXT FILE UNTIL LETTER
             while(line1!=null && line1.charAt(0)<97|| line1.charAt(0)>122){ //first file still contains non-letters
                 writer.println(line1);
+                cache.getLine(line1);
                 updatePointerToPosting(line1.substring(0, line1.indexOf(":")), lineCounter++);
                 line1=reader1.readLine();
             }
 
             while(line2!=null && line2.charAt(0)<97|| line2.charAt(0)>122){
                 writer.println(line2);
+                cache.getLine(line2);
                 updatePointerToPosting(line2.substring(0, line2.indexOf(":")), lineCounter++);
                 line2=reader1.readLine();
             }
@@ -259,14 +271,18 @@ public class Indexer {
                     if(line1.length()>0 && line2.length()>0 && line1.contains(":") && line2.contains(":")) {
                         if (line1.substring(0, line1.indexOf(":")).compareTo(line2.substring(0, line2.indexOf(":"))) < 0) {
                             letterWriter.println(line1);
+                            cache.getLine(line1);
                             updatePointerToPosting(line1.substring(0, line1.indexOf(":")), lineCounter++);
                             line1 = reader1.readLine();
                         } else if (line1.substring(0, line1.indexOf(":")).compareTo(line2.substring(0, line2.indexOf(":"))) > 0) {
                             letterWriter.println(line2);
+                            cache.getLine(line2);
                             updatePointerToPosting(line2.substring(0, line2.indexOf(":")), lineCounter++);
                             line2 = reader2.readLine();
                         } else if (line1.substring(0, line1.indexOf(":")).compareTo(line2.substring(0, line2.indexOf(":"))) == 0) {
-                            letterWriter.println(mergeSameTerm(line1, line2));
+                            String merged = mergeSameTerm(line1, line2);
+                            letterWriter.println(merged);
+                            cache.getLine(merged);
                             updatePointerToPosting(line2.substring(0, line2.indexOf(":")), lineCounter++);
                             line1 = reader1.readLine();
                             line2 = reader2.readLine();
@@ -279,6 +295,7 @@ public class Indexer {
                 //IF REACHED THE END OF THE NON LETTERS IN ONLY ONE OF THE FILES - WRITE THE REST OF THE NEXT FILE UNTIL LETTER
                 while(line1!=null && line1.charAt(0)==currentChar){ //first file still contains old letter
                     letterWriter.println(line1);
+                    cache.getLine(line1);
                     updatePointerToPosting(line1.substring(0, line1.indexOf(":")), lineCounter++);
                     line1=reader1.readLine();
                 }
@@ -286,6 +303,7 @@ public class Indexer {
 
                 while(line2!=null && line2.charAt(0)==currentChar){
                     letterWriter.println(line2);
+                    cache.getLine(line2);
                     updatePointerToPosting(line2.substring(0, line2.indexOf(":")), lineCounter++);
                     line2=reader1.readLine();
                 }
