@@ -1,12 +1,12 @@
 package sample;
 import java.io.Serializable;
-import java.util.HashSet;
+import java.util.HashMap;
 
 public class TermInDictionairy implements Comparable, Serializable{
 
     int totalOccurencesInCorpus;
     int pointerToPosting;
-    HashSet<TermInDoc> pointerToTermInCache;
+    HashMap<TermInDoc,String> pointerToTermInCache;
     int numberOfDocumentsOccuresIn;
     String term;
 
@@ -23,11 +23,11 @@ public class TermInDictionairy implements Comparable, Serializable{
 
     }
 
-    public HashSet<TermInDoc> getPointerToTermInCache() {
+    public HashMap<TermInDoc,String> getPointerToTermInCache() {
         return pointerToTermInCache;
     }
 
-    public void setPointerToTermInCache(HashSet<TermInDoc> pointerToTermInCache) {
+    public void setPointerToTermInCache(HashMap<TermInDoc,String> pointerToTermInCache) {
         this.pointerToTermInCache = pointerToTermInCache;
     }
     public int getTotalOccurencesInCorpus() {

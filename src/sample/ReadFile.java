@@ -49,7 +49,7 @@ public class ReadFile
 
         while(counter<corpusSize){
             documents.clear();
-            for(int i=0; i<100 && counter<corpusSize; i++){
+            for(int i=0; i<70 && counter<corpusSize; i++){
                 try {
                     String path = listOfFiles[counter].getPath() + "/" + listOfFiles[counter].getName();
                     BufferedReader br = new BufferedReader(new FileReader(path));
@@ -75,6 +75,7 @@ public class ReadFile
                     e.printStackTrace();
                 }
             }
+            System.out.printf("done read");
             ctrl.control(documents);
             System.out.println("done "+counter);
         }

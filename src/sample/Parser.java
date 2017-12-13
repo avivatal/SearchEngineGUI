@@ -4,33 +4,32 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.regex.Pattern;
 
 public class Parser {
     HashMap<String, ArrayList<String>> parsedDocs;
     HashMap<String, String > months;
-    HashSet<String> whitespaces;
-    HashSet<String> stopwords;
-    Pattern regex;
+    HashMap<String,String> whitespaces;
+    HashMap<String,String> stopwords;
+   // Pattern regex;
 
     public Parser() {
         this.parsedDocs = new HashMap<>();
-        whitespaces=new HashSet<>();
-        whitespaces.addAll(Arrays.asList(".",",","'","/"));
+        whitespaces=new HashMap<>();
+        whitespaces.put(".",null); whitespaces.put(",",null);whitespaces.put("'",null); whitespaces.put("/",null);
         months=new HashMap<String, String>();
         months.put("Jan", "01"); months.put("Feb","02");months.put("Mar","03");months.put("Apr","04");months.put("May","05");months.put("Jun","06");months.put("Jul","07");months.put("Aug","08");months.put("Sep","09");months.put("Oct","10");months.put("Nov","11");months.put("Dec","12");
         months.put("January", "01");months.put("February","02");months.put("March","03");months.put("April","04");months.put("June","06");months.put("July","07");months.put("August","08");months.put("September","09");months.put("October","10");months.put("November","11");months.put("December","12");
         months.put("JAN", "01");months.put("FEB","02");months.put("MAR","03");months.put("APR","04");months.put("MAY","05");months.put("JUN","06");months.put("JUL","07");months.put("AUG","08");months.put("SEP","09");months.put("OCT","10");months.put("NOV","11");months.put("DEC","12");
         months.put("JANUARY", "01");months.put("FEBRUARY","02");months.put("MARCH","03");months.put("APRIL","04");months.put("JUNE","06");months.put("JULY","07");months.put("AUGUST","08");months.put("SEPTEMBER","09");months.put("OCTOBER","10");months.put("NOVEMBER","11");months.put("DECEMBER","12");
-        regex=Pattern.compile("\\-+|\\s+|\\\n+|\\(+|\\)+|\\;+|\\:+|\\?+|\\!+|\\<+|\\>+|\\}+|\\{+|\\]+|\\[+|\\*+|\\++|\\|+|\\\"+|\\=+|\\#+|\\`+|\\\\+");
+     //   regex=Pattern.compile("\\-+|\\s+|\\\n+|\\(+|\\)+|\\;+|\\:+|\\?+|\\!+|\\<+|\\>+|\\}+|\\{+|\\]+|\\[+|\\*+|\\++|\\|+|\\\"+|\\=+|\\#+|\\`+|\\\\+");
     }
 
     public HashMap<String, ArrayList<String>> getParsedDocs() {
         return parsedDocs;
     }
 
-    public void parse(ArrayList<String> rfDocs, HashSet<String> stopwords){
+    public void parse(ArrayList<String> rfDocs, HashMap<String, String> stopwords){
         parsedDocs.clear();
         this.stopwords=stopwords;
         for(int i=0; i<rfDocs.size(); i++){
@@ -59,8 +58,8 @@ public class Parser {
 
     public void split(String text, String i) {
 
-        //String[] splited = text.split("\\-+|\\s+|\\\n+|\\(+|\\)+|\\;+|\\:+|\\?+|\\!+|\\<+|\\>+|\\}+|\\{+|\\]+|\\[+|\\*+|\\++|\\|+|\\\"+|\\=+|\\\\+");
-        String[] splited = regex.split(text);
+        String[] splited = text.split("\\-+|\\s+|\\\n+|\\(+|\\)+|\\;+|\\:+|\\?+|\\!+|\\<+|\\>+|\\}+|\\{+|\\]+|\\[+|\\*+|\\++|\\|+|\\\"+|\\=+|\\#+|\\`+|\\\\+");
+       // String[] splited = regex.split(text);
 
         int splitedlen = splited.length;
 
@@ -87,7 +86,7 @@ public class Parser {
 
                         //check next word
                         boolean bool = true;
-                        if (whitespaces.contains(splitedStringj.substring(splitedj - 1))) {
+                        if (whitespaces.containsKey(splitedStringj.substring(splitedj - 1))) {
                             bool = false; //there is a whitespace after current word- end of expression
                         }
                         splited[j] = cleanFromEnd(splitedStringj);
@@ -101,7 +100,7 @@ public class Parser {
                             //if next word starts with uppercase and isnt a month
                             if (splitedlen > index + 1 && splited[index + 1].length() > 0 && Character.isUpperCase(splited[index + 1].charAt(0)) && !months.containsKey(splited[index + 1])) {
 
-                                if (splitedlen > index + 1 && whitespaces.contains(splited[index + 1].substring(splited[index + 1].length() - 1))) {
+                                if (splitedlen > index + 1 && whitespaces.containsKey(splited[index + 1].substring(splited[index + 1].length() - 1))) {
                                     bool = false;
                                     splited[index + 1] = cleanFromStart(cleanFromEnd(splited[index + 1]));
                                     if (splitedlen > j + 1) {
@@ -147,13 +146,13 @@ public class Parser {
                         }
                         String expression = builder.toString();
                         //save expression
-                        if (!stopwords.contains(expression)) {
+                        if (!stopwords.containsKey(expression)) {
                             parsedDocs.get(i).add(expression);
                         }
                         //save each word in expression
                         if (index != j) {
                             for (String s : expression.split(" ")) {
-                                if (!stopwords.contains(s)) {
+                                if (!stopwords.containsKey(s)) {
                                     parsedDocs.get(i).add(s);
                                 }
                             }
@@ -269,7 +268,7 @@ public class Parser {
                                 }
                             }
                         } else { //current word isnt connected to a date, save it
-                            if (!stopwords.contains(splitedStringj)) {
+                            if (!stopwords.containsKey(splitedStringj)) {
                                 parsedDocs.get(i).add(splitedStringj.toLowerCase());
                             }
                         }
@@ -373,7 +372,7 @@ public class Parser {
                         }
                     } else { //regular word - save it
 
-                        if (!stopwords.contains(splitedStringj)) {
+                        if (!stopwords.containsKey(splitedStringj)) {
                             parsedDocs.get(i).add(splitedStringj.toLowerCase());
                         }
                     }
@@ -407,12 +406,12 @@ public class Parser {
         if(s.length()>0) {
             //clean from start
             char current = s.charAt(0);
-            while (s.length() > 1 && whitespaces.contains(current + "")) {
+            while (s.length() > 1 && whitespaces.containsKey(current + "")) {
                 s = s.substring(1);
                 current = s.charAt(0);
             }
         }
-        if(whitespaces.contains(s)){
+        if(whitespaces.containsKey(s)){
             s="";
         }
         return s;
@@ -425,7 +424,7 @@ public class Parser {
             if (s.length() > 0) {
                 current = s.charAt(s.length() - 1);
             }
-            while (s.length() > 1 && whitespaces.contains(current + "")) {
+            while (s.length() > 1 && whitespaces.containsKey(current + "")) {
                 s = s.substring(0, s.length() - 1);
                 current = s.charAt(s.length() - 1);
             }
@@ -444,7 +443,7 @@ public class Parser {
 
          //   }
         }
-        if(whitespaces.contains(s)){
+        if(whitespaces.containsKey(s)){
             s="";
         }
         return s;

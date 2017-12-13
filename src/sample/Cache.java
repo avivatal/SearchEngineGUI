@@ -6,7 +6,7 @@ public class Cache implements Serializable {
 
 
     PriorityQueue<TermInDictionairy> queue;
-    HashMap<String, HashSet<TermInDoc>> cache;
+    HashMap<String, HashMap<TermInDoc,String>> cache;
     HashMap<String, String> pointersToPosting;
 
     public Cache() {
@@ -24,7 +24,9 @@ public class Cache implements Serializable {
         }
     }
 
-
+    public HashMap<String, String> getPointersToPosting() {
+        return pointersToPosting;
+    }
 
     //string to posting records in cache
     public void getLine(String postingLine, int linecounter) {
@@ -77,10 +79,10 @@ public class Cache implements Serializable {
             }
 
             //take only 25% of the posting records - with the highest tf
-            double maxRecordsForTerm = Math.ceil(sortedTermsInDoc.size() / 4.0);
-            HashSet<TermInDoc> postingsForCache =  new HashSet<>();
+            double maxRecordsForTerm = Math.ceil(sortedTermsInDoc.size() / 8.0);
+            HashMap<TermInDoc,String> postingsForCache =  new HashMap<>();
             for(int i=0; i<maxRecordsForTerm; i++){
-                postingsForCache.add(sortedTermsInDoc.poll());
+                postingsForCache.put(sortedTermsInDoc.poll(),null);
             }
 
             //add to cache
@@ -95,7 +97,7 @@ public class Cache implements Serializable {
 
 
     //cache is map of <term, list of termInDocs> - only relevant termInDocs
-    public HashMap<String, HashSet<TermInDoc>> getCache() {
+    public HashMap<String, HashMap<TermInDoc,String>> getCache() {
         return cache;
     }
 }

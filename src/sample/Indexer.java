@@ -15,12 +15,18 @@ public class Indexer {
     int numberOfTempPostingFiles=0;
     Cache cache;
     String destinationDirectory;
+    String directory;
 
     public Indexer() {
         dictionairy = new HashMap<>();
         cache = new Cache();
 
     }
+
+    public void setDirectory(String directory) {
+        this.directory = directory;
+    }
+
     public void setPath(String destinationDirectory){
         this.destinationDirectory=destinationDirectory;
     }
@@ -58,7 +64,7 @@ public class Indexer {
         try {
             //create file for temp posting file
             numberOfTempPostingFiles++;
-            PrintWriter writer = new PrintWriter(destinationDirectory+"/"+numberOfTempPostingFiles+".txt" , "UTF-8");
+            PrintWriter writer = new PrintWriter(destinationDirectory+"/"+directory+"/"+numberOfTempPostingFiles+".txt" , "UTF-8");
 
 
             //write each posting entry to file
@@ -122,8 +128,8 @@ public class Indexer {
             //check if uneven - only rename the last file to the last counter of this iteration
             if((endIndex-startIndex)%2==0){
                 int lastFileIndex = nextcounter+((endIndex-startIndex)/2);
-                Path source = Paths.get(destinationDirectory+"/"+endIndex+".txt");
-                Files.move(source, source.resolveSibling(destinationDirectory+"/"+lastFileIndex+".txt"));
+                Path source = Paths.get(destinationDirectory+"/"+directory+"/"+endIndex+".txt");
+                Files.move(source, source.resolveSibling(destinationDirectory+"/"+directory+"/"+lastFileIndex+".txt"));
                 endIndex--;
                 ans++;
 
@@ -133,11 +139,11 @@ public class Indexer {
             while (currentIndex < endIndex) {
 
                 //create new file
-                PrintWriter writer = new PrintWriter(destinationDirectory+"/"+(counter++)+".txt", "UTF-8");
+                PrintWriter writer = new PrintWriter(destinationDirectory+"/"+directory+"/"+(counter++)+".txt", "UTF-8");
 
                 //open files to merge
-                File file1=new File(destinationDirectory+"/"+currentIndex+".txt");
-                File file2=new File(destinationDirectory+"/"+(currentIndex+1)+".txt");
+                File file1=new File(destinationDirectory+"/"+directory+"/"+currentIndex+".txt");
+                File file2=new File(destinationDirectory+"/"+directory+"/"+(currentIndex+1)+".txt");
                 FileReader fileReader1 = new FileReader(file1);
                 FileReader fileReader2 = new FileReader(file2);
                 BufferedReader reader1=new BufferedReader(fileReader1);
@@ -205,11 +211,11 @@ public class Indexer {
         try {
             char current = 'a';
             //CREATE NEW FILE for non-letters (symbols and numbers)
-            PrintWriter writer = new PrintWriter(destinationDirectory+"/"+"nonLetters.txt", "UTF-8");
+            PrintWriter writer = new PrintWriter(destinationDirectory+"/"+directory+"/"+"nonLetters.txt", "UTF-8");
 
             //OPEN FILES TO MERGE
-            File file1=new File(destinationDirectory+"/"+start+".txt");
-            File file2=new File(destinationDirectory+"/"+end+".txt");
+            File file1=new File(destinationDirectory+"/"+directory+"/"+start+".txt");
+            File file2=new File(destinationDirectory+"/"+directory+"/"+end+".txt");
             FileReader fileReader1 = new FileReader(file1);
             FileReader fileReader2 = new FileReader(file2);
             BufferedReader reader1=new BufferedReader(fileReader1);
@@ -265,7 +271,7 @@ public class Indexer {
             char currentChar = 'a';
             while(currentChar<123){
                 lineCounter=1;
-                PrintWriter letterWriter = new PrintWriter(destinationDirectory+"/"+currentChar+".txt", "UTF-8");
+                PrintWriter letterWriter = new PrintWriter(destinationDirectory+"/"+directory+"/"+currentChar+".txt", "UTF-8");
                 while(line1!=null && line2!=null && line1.charAt(0)==currentChar && line2.charAt(0)==currentChar) {
                     if(line1.length()>0 && line2.length()>0 && line1.contains(":") && line2.contains(":")) {
                         if (line1.substring(0, line1.indexOf(":")).compareTo(line2.substring(0, line2.indexOf(":"))) < 0) {
@@ -330,6 +336,7 @@ public class Indexer {
     }
 
     //pointers from dictionairy to posting
+
     private void updatePointerToPosting(String term, int lineNumber){
         dictionairy.get(term).setPointerToPosting(lineNumber);
     }

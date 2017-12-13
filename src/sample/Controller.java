@@ -17,10 +17,12 @@ import java.awt.event.ActionEvent;
 import java.beans.EventHandler;
 import java.io.*;
 
+import java.lang.instrument.Instrumentation;
 import java.util.*;
 import java.util.jar.JarFile;
 
 import javafx.scene.control.Alert;
+//import jdk.nashorn.internal.ir.debug.ObjectSizeCalculator;
 
 
 public class Controller {
@@ -56,8 +58,29 @@ public class Controller {
 
     private int calculateNumOfDocs(){
         return rf.getCounter();
+    }
 
 
+
+    private long calcCacheSize(){
+        return 0;
+       // return ObjectSizeFetcher.getObjectSize(rf.ctrl.indexer.cache.getCache())+ObjectSizeFetcher.getObjectSize(rf.ctrl.indexer.cache.getPointersToPosting());
+    }
+
+    private long calcDictionairySize(){
+        return 0;
+       /* ObjectSizeFetcher o =new ObjectSizeFetcher();
+        return o.getObjectSize(rf.ctrl.indexer.dictionairy);*/
+    }
+
+    private long calcPostingSize(){
+        File dir = new File(destinationDirectory+"/"+rf.ctrl.getDirectory());
+        long length = 0;
+        for (File file : dir.listFiles()) {
+            if (file.isFile())
+                length += file.length();
+        }
+        return length;
     }
 
     public void setStage(Stage primaryStage){
@@ -104,12 +127,15 @@ public class Controller {
             @Override
             public void run() {
                 try {
-                    ObjectOutputStream outCache = new ObjectOutputStream(new FileOutputStream(savePath+"/cache.ser"));
+                    if(savePath==null){
+                        savePath=destinationDirectory;
+                    }
+                    ObjectOutputStream outCache = new ObjectOutputStream(new FileOutputStream(savePath+"/"+rf.ctrl.getDirectory()+"/cache.ser"));
                     outCache.writeObject(rf.ctrl.indexer.cache);
                     outCache.flush();
                     outCache.close();
 
-                    ObjectOutputStream outDict = new ObjectOutputStream(new FileOutputStream(savePath+"/dictionairy.ser"));
+                    ObjectOutputStream outDict = new ObjectOutputStream(new FileOutputStream(savePath+"/"+rf.ctrl.getDirectory()+"/dictionairy.ser"));
                     outDict.writeObject(rf.ctrl.indexer.dictionairy);
                     outDict.flush();
                     outDict.close();
@@ -125,26 +151,26 @@ public class Controller {
     }
 
     public void load(){
-      //  Platform.runLater(new Runnable(){
+        //  Platform.runLater(new Runnable(){
         //    @Override
         //    public void run() {
-                try {
-                    ObjectInputStream inCache = new ObjectInputStream(new FileInputStream(loadPath+"/cache.ser"));
-                    Cache cache = (Cache) inCache.readObject();
-                    inCache.close();
-                    rf.ctrl.indexer.cache=cache;
+        try {
+            ObjectInputStream inCache = new ObjectInputStream(new FileInputStream(loadPath+"/cache.ser"));
+            Cache cache = (Cache) inCache.readObject();
+            inCache.close();
+            rf.ctrl.indexer.cache=cache;
 
-                    ObjectInputStream inDict = new ObjectInputStream(new FileInputStream(loadPath+"/dictionairy.ser"));
-                    rf.ctrl.indexer.dictionairy = (HashMap<String,TermInDictionairy>)inDict.readObject();
-                    inDict.close();
+            ObjectInputStream inDict = new ObjectInputStream(new FileInputStream(loadPath+"/dictionairy.ser"));
+            rf.ctrl.indexer.dictionairy = (HashMap<String,TermInDictionairy>)inDict.readObject();
+            inDict.close();
 
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                    alert.setContentText("Cache and Dictionairy have been loaded");
-                    alert.show();
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setContentText("Cache and Dictionairy have been loaded");
+            alert.show();
 
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         //    }});
     }
 
@@ -153,54 +179,60 @@ public class Controller {
         Platform.runLater(new Runnable(){
             @Override
             public void run(){
-        try {
+                try {
 
-            btn_start.setDisable(true);
-            btn_reset.setDisable(true);
-            browse1.setDisable(true);
-            browse2.setDisable(true);
-            if(corpusPath.toString().length()==0){
-                corpusPath=corpBrowse.getText();
-            }
-            if(destinationDirectory.toString().length()==0){
-                destinationDirectory=destBrowse.getText();
-            }
-            rf.setDestinationDirectory(destinationDirectory);
-            rf.setStopwordsPath(corpusPath+"/stop_words");
-            rf.setCtrl();
-            rf.read(corpusPath+"/corpus");
-            btn_start.setDisable(false);
-            btn_reset.setDisable(false);
-            browse1.setDisable(false);
-            browse2.setDisable(false);
+                    btn_start.setDisable(true);
+                    btn_reset.setDisable(true);
+                    browse1.setDisable(true);
+                    browse2.setDisable(true);
+                    if(corpusPath.toString().length()==0){
+                        corpusPath=corpBrowse.getText();
+                    }
+                    if(destinationDirectory.toString().length()==0){
+                        destinationDirectory=destBrowse.getText();
+                    }
+                    rf.ctrl.indexer.numberOfTempPostingFiles=0;
+                    rf.ctrl.setWithStemming(stembox.isSelected());
+                    rf.setDestinationDirectory(destinationDirectory);
+                    rf.setStopwordsPath(corpusPath+"/stop_words");
+                    rf.setCtrl();
+                    rf.read(corpusPath+"/corpus");
+                    btn_start.setDisable(false);
+                    btn_reset.setDisable(false);
+                    browse1.setDisable(false);
+                    browse2.setDisable(false);
 
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setContentText("Indexing Process has Completed");
-            alert.show();
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setContentText("Indexing Process has Completed\n"
+                            +"Dictionairy Size is: "+calcDictionairySize()
+                            +"\nPosting Size is: "+calcPostingSize()+
+                            "\nCache Size is: "+calcCacheSize()+
+                            "\nNumber of documents indexed: "+calculateNumOfDocs());
+                    alert.show();
 
-        }catch (NullPointerException e){
-      //     e.printStackTrace();
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setContentText("File Path Invalid");
-            alert.show();
-            btn_start.setDisable(false);
-            btn_reset.setDisable(false);
-            browse1.setDisable(false);
-            browse2.setDisable(false);
-        }
-        catch (FileNotFoundException e){
-        //    e.printStackTrace();
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setContentText("File Path Invalid");
-            alert.show();
-            btn_start.setDisable(false);
-            btn_reset.setDisable(false);
-            browse1.setDisable(false);
-            browse2.setDisable(false);
-        }
+                }catch (NullPointerException e){
+                    //     e.printStackTrace();
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setContentText("File Path Invalid");
+                    alert.show();
+                    btn_start.setDisable(false);
+                    btn_reset.setDisable(false);
+                    browse1.setDisable(false);
+                    browse2.setDisable(false);
+                }
+                catch (FileNotFoundException e){
+                    //    e.printStackTrace();
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setContentText("File Path Invalid");
+                    alert.show();
+                    btn_start.setDisable(false);
+                    btn_reset.setDisable(false);
+                    browse1.setDisable(false);
+                    browse2.setDisable(false);
+                }
 
 
-    }});
+            }});
         //thread.start();
        /* try {
             thread.join();
@@ -217,15 +249,15 @@ public class Controller {
 
     public void reset(){
 
-            if(destinationDirectory!=null) {
-                btn_start.setDisable(true);
-                btn_reset.setDisable(true);
-                browse1.setDisable(true);
-                browse2.setDisable(true);
-                cacheB.setDisable(true);
-                dictB.setDisable(true);
-
-                char c = 'a';
+        if(destinationDirectory!=null) {
+            btn_start.setDisable(true);
+            btn_reset.setDisable(true);
+            browse1.setDisable(true);
+            browse2.setDisable(true);
+            cacheB.setDisable(true);
+            dictB.setDisable(true);
+//DELETE THE DIRECTORIES
+          /*      char c = 'a';
                 while (c <= 'z') {
                     File posting = new File(destinationDirectory + "/" + c + ".txt");
                     posting.delete();
@@ -234,23 +266,40 @@ public class Controller {
                 File nonLetters = new File(destinationDirectory + "/nonLetters.txt");
                 File documents = new File(destinationDirectory + "/documents.txt");
                 nonLetters.delete();
-                documents.delete();
+                documents.delete();*/
+            File withStem = new File(destinationDirectory + "/withStem");
+            File noStem = new File(destinationDirectory + "/noStem");
+            if(withStem.exists()){
+                File[] files = withStem.listFiles();
+                for (File aFile : files) {
+                    aFile.delete();
+                }
+                withStem.delete();
+            }
+            if(noStem.exists()){
+                File[] files = noStem.listFiles();
+                for (File aFile : files) {
+                    aFile.delete();
+                }
+                noStem.delete();
+            }
+            rf=new ReadFile();
 
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setContentText("Reset has Completed");
-                alert.show();
-                btn_start.setDisable(false);
-                btn_reset.setDisable(false);
-                browse1.setDisable(false);
-                browse2.setDisable(false);
-                cacheB.setDisable(false);
-                dictB.setDisable(false);
-            }
-            else{
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setContentText("Unable to Reset");
-                alert.show();
-            }
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setContentText("Reset has Completed");
+            alert.show();
+            btn_start.setDisable(false);
+            btn_reset.setDisable(false);
+            browse1.setDisable(false);
+            browse2.setDisable(false);
+            cacheB.setDisable(false);
+            dictB.setDisable(false);
+        }
+        else{
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setContentText("Unable to Reset");
+            alert.show();
+        }
 
 
     }
@@ -265,24 +314,24 @@ public class Controller {
             cacheB.setDisable(true);
             dictB.setDisable(true);
 
-            HashMap<String, HashSet<TermInDoc>> cache = rf.ctrl.indexer.cache.getCache();
+            HashMap<String, HashMap<TermInDoc,String>> cache = rf.ctrl.indexer.cache.getCache();
 
             //sort the terms in the cache lexicographically
             SortedSet<String> sortedKeys = new TreeSet<String>(cache.keySet());
 
-         //   StringBuilder cacheDetails = new StringBuilder();
+            //   StringBuilder cacheDetails = new StringBuilder();
             ObservableList<String> items= FXCollections.observableArrayList();
             int counter=1;
             for (String term : sortedKeys) {
                 StringBuilder cacheDetails = new StringBuilder();
                 cacheDetails.append(counter+") "+term + ": ");
-                for (TermInDoc tid : cache.get(term)) {
+                for (TermInDoc tid : cache.get(term).keySet()) {
                     cacheDetails.append(tid.toString());
 
                 }
                 items.add(cacheDetails.toString());
                 counter++;
-              //  cacheDetails.append("\n");
+                //  cacheDetails.append("\n");
             }
 
             Stage newstage = new Stage();

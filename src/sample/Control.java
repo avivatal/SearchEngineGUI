@@ -1,5 +1,6 @@
 package sample;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -9,19 +10,38 @@ import java.util.PriorityQueue;
 
 public class Control {
 
-    HashSet<String> stopwords = new HashSet<String>();
+    HashMap<String,String> stopwords = new HashMap();
     Parser parser;
     Stemmer stemmer;
     Indexer indexer;
     HashMap<String,String> documentProperties;
     String destinationDirectory;
-   // HashMap<String, String> beforeAfterStem;
+    HashMap<String, String> beforeAfterStem;
+    boolean withStemming;
+    String directory;
+
 
     Control() {
         parser = new Parser();
         stemmer = new Stemmer();
         indexer = new Indexer();
-     //   beforeAfterStem = new HashMap<>();
+        beforeAfterStem = new HashMap<>();
+    }
+
+
+    public String getDirectory() {
+        return directory;
+    }
+
+    public void setWithStemming(boolean withStemming) {
+        this.withStemming = withStemming;
+        if(withStemming){
+            directory="withStem";
+        }
+        else{
+            directory="noStem";
+        }
+        indexer.setDirectory(directory);
     }
 
     public void setPaths(String stopwordsPath, String destinationDirectory){
@@ -33,7 +53,7 @@ public class Control {
             StringBuilder sb = new StringBuilder();
             String line = br.readLine();
             while (line != null) {
-                stopwords.add(line);
+                stopwords.put(line,null);
                 line = br.readLine();
             }
             br.close();
@@ -47,6 +67,7 @@ public class Control {
 
         //parse docs in current file
         parser.parse(documents, stopwords);
+        System.out.println("done parse");
         HashMap<String, ArrayList<String>> parseddocs = parser.getParsedDocs();
 
         //stem
@@ -55,7 +76,9 @@ public class Control {
 
         try{
             //create file to save document properties
-            PrintWriter writer = new PrintWriter(destinationDirectory+"/"+"documents.txt","UTF-8");
+            File dir = new File(destinationDirectory+"/"+directory);
+            dir.mkdir();
+            PrintWriter writer = new PrintWriter(destinationDirectory+"/"+directory+"/"+"documents.txt","UTF-8");
 
             //iterate over all docs in file
             int docsCounter=0;
@@ -69,16 +92,20 @@ public class Control {
                 for (int j = 1; j < doc.size(); j++) {
                     String word = (String) (doc.get(j));
                     numberOfTermsInDoc++;
-                 //   String term="";
-                 //   if(!beforeAfterStem.containsKey(word)) {
-                        stemmer.add(word.toCharArray(), word.length());
-                        stemmer.stem();
-                    String term = stemmer.toString();
-                      //  beforeAfterStem.put(word,term);
-                 //   }
-                 /*   else{
-                        term = beforeAfterStem.get(word);
-                    }*/
+                    String term="";
+                    if(withStemming) {
+                        if (!beforeAfterStem.containsKey(word)) {
+                            stemmer.add(word.toCharArray(), word.length());
+                            stemmer.stem();
+                            term = stemmer.toString();
+                            beforeAfterStem.put(word, term);
+                        } else {
+                            term = beforeAfterStem.get(word);
+                        }
+                    }
+                    else{
+                        term=word;
+                    }
 
                     //if term is new in hashmap
                     if (!stemmedTerms.containsKey(term)) {
@@ -126,10 +153,8 @@ public class Control {
             e.printStackTrace();
         }
         //finish sterm
-
         //indexer
         indexer.index(stemmedTerms);
-
 
 
         System.out.println("done");
