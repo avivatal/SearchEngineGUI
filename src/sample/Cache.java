@@ -7,10 +7,11 @@ public class Cache implements Serializable {
 
     PriorityQueue<TermInDictionairy> queue;
     HashMap<String, HashSet<TermInDoc>> cache;
+    HashMap<String, String> pointersToPosting;
 
     public Cache() {
         cache=new HashMap<>();
-
+        pointersToPosting=new HashMap<>();
     }
 
     //get 10000 most popular words in corpus. Sorted by words that appear in the most amount of docs in corpus.
@@ -26,7 +27,7 @@ public class Cache implements Serializable {
 
 
     //string to posting records in cache
-    public void getLine(String postingLine) {
+    public void getLine(String postingLine, int linecounter) {
         String term = postingLine.substring(0, postingLine.indexOf(':'));
 
         //if the word is one of the 10000 most popular words in corpus
@@ -84,6 +85,7 @@ public class Cache implements Serializable {
 
             //add to cache
             cache.put(term,postingsForCache);
+            pointersToPosting.put(term,linecounter+"");
         }
     }
 

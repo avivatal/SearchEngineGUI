@@ -15,16 +15,18 @@ public class Control {
     Indexer indexer;
     HashMap<String,String> documentProperties;
     String destinationDirectory;
+   // HashMap<String, String> beforeAfterStem;
 
     Control() {
         parser = new Parser();
         stemmer = new Stemmer();
-        indexer = new Indexer(destinationDirectory);
-
+        indexer = new Indexer();
+     //   beforeAfterStem = new HashMap<>();
     }
 
     public void setPaths(String stopwordsPath, String destinationDirectory){
         this.destinationDirectory=destinationDirectory;
+        indexer.setPath(destinationDirectory);
         documentProperties=new HashMap<>();
         try {
             BufferedReader br = new BufferedReader(new FileReader(stopwordsPath));
@@ -65,10 +67,18 @@ public class Control {
                 String docName=(String) doc.get(0);
                 String mostFrequentTerm="";
                 for (int j = 1; j < doc.size(); j++) {
+                    String word = (String) (doc.get(j));
                     numberOfTermsInDoc++;
-                    stemmer.add(((String) (doc.get(j))).toCharArray(), ((String) (doc.get(j))).length());
-                    stemmer.stem();
+                 //   String term="";
+                 //   if(!beforeAfterStem.containsKey(word)) {
+                        stemmer.add(word.toCharArray(), word.length());
+                        stemmer.stem();
                     String term = stemmer.toString();
+                      //  beforeAfterStem.put(word,term);
+                 //   }
+                 /*   else{
+                        term = beforeAfterStem.get(word);
+                    }*/
 
                     //if term is new in hashmap
                     if (!stemmedTerms.containsKey(term)) {

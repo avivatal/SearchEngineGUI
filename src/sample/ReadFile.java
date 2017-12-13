@@ -15,11 +15,16 @@ public class ReadFile
     Pattern regex;
     String stopwordsPath;
     String destinationDirectory;
+    int counter;
 
     public ReadFile() {
 
         regex = Pattern.compile("<DOC>");
         ctrl=new Control();
+    }
+
+    public int getCounter() {
+        return counter;
     }
 
     public void setStopwordsPath(String stopwordsPath){
@@ -36,15 +41,15 @@ public class ReadFile
 
     public void read(String corpusPath) throws FileNotFoundException{
 
-        int counter=0;
+        counter=0;
         ArrayList<String> documents=new ArrayList<>();
         File corpusFolder = new File(corpusPath);
         File[] listOfFiles = corpusFolder.listFiles();
         int corpusSize = listOfFiles.length;
 
-        while(counter<3){
+        while(counter<corpusSize){
             documents.clear();
-            for(int i=0; i<2 && counter<corpusSize; i++){
+            for(int i=0; i<100 && counter<corpusSize; i++){
                 try {
                     String path = listOfFiles[counter].getPath() + "/" + listOfFiles[counter].getName();
                     BufferedReader br = new BufferedReader(new FileReader(path));

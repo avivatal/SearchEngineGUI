@@ -16,12 +16,12 @@ import javafx.stage.Stage;
 import java.awt.event.ActionEvent;
 import java.beans.EventHandler;
 import java.io.*;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.SortedSet;
-import java.util.TreeSet;
+
+import java.util.*;
+import java.util.jar.JarFile;
 
 import javafx.scene.control.Alert;
+
 
 public class Controller {
 
@@ -54,6 +54,11 @@ public class Controller {
         rf=new ReadFile();
     }
 
+    private int calculateNumOfDocs(){
+        return rf.getCounter();
+
+
+    }
 
     public void setStage(Stage primaryStage){
         stage=primaryStage;

@@ -16,9 +16,12 @@ public class Indexer {
     Cache cache;
     String destinationDirectory;
 
-    public Indexer(String destinationDirectory) {
+    public Indexer() {
         dictionairy = new HashMap<>();
         cache = new Cache();
+
+    }
+    public void setPath(String destinationDirectory){
         this.destinationDirectory=destinationDirectory;
     }
 
@@ -45,10 +48,6 @@ public class Indexer {
             //add to cache
             //    cache.addToCache(entry);
         }
-        //add pointers from dictionairy to cache
-   /*     for(String termInCache : cache.getCache().keySet()){
-            dictionairy.get(termInCache).setPointerToTermInCache(cache.getCache().get(termInCache));
-        }*/
 
 
         //temp posting file
@@ -226,18 +225,18 @@ public class Indexer {
                 if(line1.length()>0 && line2.length()>0 && line1.contains(":") && line2.contains(":")) {
                     if (line1.substring(0, line1.indexOf(":")).compareTo(line2.substring(0, line2.indexOf(":"))) < 0) {
                         writer.println(line1);
-                        cache.getLine(line1);
+                        cache.getLine(line1,lineCounter);
                         updatePointerToPosting(line1.substring(0, line1.indexOf(":")), lineCounter++);
                         line1 = reader1.readLine();
                     } else if (line1.substring(0, line1.indexOf(":")).compareTo(line2.substring(0, line2.indexOf(":"))) > 0) {
                         writer.println(line2);
-                        cache.getLine(line2);
+                        cache.getLine(line2,lineCounter);
                         updatePointerToPosting(line2.substring(0, line2.indexOf(":")), lineCounter++);
                         line2 = reader2.readLine();
                     } else if (line1.substring(0, line1.indexOf(":")).compareTo(line2.substring(0, line2.indexOf(":"))) == 0) {
                         String merged=mergeSameTerm(line1, line2);
                         writer.println(merged);
-                        cache.getLine(merged);
+                        cache.getLine(merged,lineCounter);
                         updatePointerToPosting(line1.substring(0, line1.indexOf(":")), lineCounter++);
                         line1 = reader1.readLine();
                         line2 = reader2.readLine();
@@ -249,14 +248,14 @@ public class Indexer {
             //IF REACHED THE END OF THE NON LETTERS IN ONLY ONE OF THE FILES - WRITE THE REST OF THE NEXT FILE UNTIL LETTER
             while(line1!=null && line1.charAt(0)<97|| line1.charAt(0)>122){ //first file still contains non-letters
                 writer.println(line1);
-                cache.getLine(line1);
+                cache.getLine(line1,lineCounter);
                 updatePointerToPosting(line1.substring(0, line1.indexOf(":")), lineCounter++);
                 line1=reader1.readLine();
             }
 
             while(line2!=null && line2.charAt(0)<97|| line2.charAt(0)>122){
                 writer.println(line2);
-                cache.getLine(line2);
+                cache.getLine(line2,lineCounter);
                 updatePointerToPosting(line2.substring(0, line2.indexOf(":")), lineCounter++);
                 line2=reader1.readLine();
             }
@@ -271,18 +270,18 @@ public class Indexer {
                     if(line1.length()>0 && line2.length()>0 && line1.contains(":") && line2.contains(":")) {
                         if (line1.substring(0, line1.indexOf(":")).compareTo(line2.substring(0, line2.indexOf(":"))) < 0) {
                             letterWriter.println(line1);
-                            cache.getLine(line1);
+                            cache.getLine(line1,lineCounter);
                             updatePointerToPosting(line1.substring(0, line1.indexOf(":")), lineCounter++);
                             line1 = reader1.readLine();
                         } else if (line1.substring(0, line1.indexOf(":")).compareTo(line2.substring(0, line2.indexOf(":"))) > 0) {
                             letterWriter.println(line2);
-                            cache.getLine(line2);
+                            cache.getLine(line2,lineCounter);
                             updatePointerToPosting(line2.substring(0, line2.indexOf(":")), lineCounter++);
                             line2 = reader2.readLine();
                         } else if (line1.substring(0, line1.indexOf(":")).compareTo(line2.substring(0, line2.indexOf(":"))) == 0) {
                             String merged = mergeSameTerm(line1, line2);
                             letterWriter.println(merged);
-                            cache.getLine(merged);
+                            cache.getLine(merged,lineCounter);
                             updatePointerToPosting(line2.substring(0, line2.indexOf(":")), lineCounter++);
                             line1 = reader1.readLine();
                             line2 = reader2.readLine();
@@ -295,7 +294,7 @@ public class Indexer {
                 //IF REACHED THE END OF THE NON LETTERS IN ONLY ONE OF THE FILES - WRITE THE REST OF THE NEXT FILE UNTIL LETTER
                 while(line1!=null && line1.charAt(0)==currentChar){ //first file still contains old letter
                     letterWriter.println(line1);
-                    cache.getLine(line1);
+                    cache.getLine(line1,lineCounter);
                     updatePointerToPosting(line1.substring(0, line1.indexOf(":")), lineCounter++);
                     line1=reader1.readLine();
                 }
@@ -303,7 +302,7 @@ public class Indexer {
 
                 while(line2!=null && line2.charAt(0)==currentChar){
                     letterWriter.println(line2);
-                    cache.getLine(line2);
+                    cache.getLine(line2,lineCounter);
                     updatePointerToPosting(line2.substring(0, line2.indexOf(":")), lineCounter++);
                     line2=reader1.readLine();
                 }
@@ -322,7 +321,7 @@ public class Indexer {
             reader1.close();
             reader2.close();
 
-
+            pointerDictoCache();
 
         }catch(Exception e){
             e.printStackTrace();
@@ -330,7 +329,16 @@ public class Indexer {
 
     }
 
+    //pointers from dictionairy to posting
     private void updatePointerToPosting(String term, int lineNumber){
         dictionairy.get(term).setPointerToPosting(lineNumber);
     }
+
+    //add pointers from dictionairy to cache
+    public void pointerDictoCache(){
+        for(String termInCache : cache.getCache().keySet()) {
+            dictionairy.get(termInCache).setPointerToTermInCache(cache.getCache().get(termInCache));
+        }
+    }
+
 }
