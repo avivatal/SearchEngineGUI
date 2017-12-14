@@ -1,4 +1,6 @@
 package sample;
+import java.io.File;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -7,14 +9,29 @@ import java.util.HashMap;
 import java.util.regex.Pattern;
 
 public class Parser {
-    HashMap<String, ArrayList<String>> parsedDocs;
     HashMap<String, String > months;
     HashMap<String,String> whitespaces;
     HashMap<String,String> stopwords;
-   // Pattern regex;
+    Stemmer stemmer = new Stemmer();
+    String destinationDirectory;
+    HashMap<String, String> beforeAfterStem;
+    String directory; //with/without stem directory
+    HashMap<String, HashMap<String,TermInDoc>> stemmedTerms;
+    int numberOfTermsInDoc;
+    String docName; //current document
+    TermInDoc maxTF; //max tf in current document
+    String mostFrequentTerm; //most frequent term in current document
+    HashMap<String,String> documentProperties; //pointer for each doc to the line number of the doc properties saved in disk.
+    int docNumber; //counter for documents
+    boolean withStemming;
+    // Pattern regex;
 
     public Parser() {
-        this.parsedDocs = new HashMap<>();
+        stemmedTerms=new HashMap<>();
+        documentProperties=new HashMap<>();
+        docNumber=0;
+        numberOfTermsInDoc=0;
+        //  this.parsedDocs = new HashMap<>();
         whitespaces=new HashMap<>();
         whitespaces.put(".",null); whitespaces.put(",",null);whitespaces.put("'",null); whitespaces.put("/",null);
         months=new HashMap<String, String>();
@@ -22,22 +39,40 @@ public class Parser {
         months.put("January", "01");months.put("February","02");months.put("March","03");months.put("April","04");months.put("June","06");months.put("July","07");months.put("August","08");months.put("September","09");months.put("October","10");months.put("November","11");months.put("December","12");
         months.put("JAN", "01");months.put("FEB","02");months.put("MAR","03");months.put("APR","04");months.put("MAY","05");months.put("JUN","06");months.put("JUL","07");months.put("AUG","08");months.put("SEP","09");months.put("OCT","10");months.put("NOV","11");months.put("DEC","12");
         months.put("JANUARY", "01");months.put("FEBRUARY","02");months.put("MARCH","03");months.put("APRIL","04");months.put("JUNE","06");months.put("JULY","07");months.put("AUGUST","08");months.put("SEPTEMBER","09");months.put("OCTOBER","10");months.put("NOVEMBER","11");months.put("DECEMBER","12");
-     //   regex=Pattern.compile("\\-+|\\s+|\\\n+|\\(+|\\)+|\\;+|\\:+|\\?+|\\!+|\\<+|\\>+|\\}+|\\{+|\\]+|\\[+|\\*+|\\++|\\|+|\\\"+|\\=+|\\#+|\\`+|\\\\+");
+        //   regex=Pattern.compile("\\-+|\\s+|\\\n+|\\(+|\\)+|\\;+|\\:+|\\?+|\\!+|\\<+|\\>+|\\}+|\\{+|\\]+|\\[+|\\*+|\\++|\\|+|\\\"+|\\=+|\\#+|\\`+|\\\\+");
     }
 
-    public HashMap<String, ArrayList<String>> getParsedDocs() {
-        return parsedDocs;
+    public HashMap<String, HashMap<String,TermInDoc>> getStemmedTerms() {
+        return stemmedTerms;
     }
 
     public void parse(ArrayList<String> rfDocs, HashMap<String, String> stopwords){
-        parsedDocs.clear();
+        stemmedTerms.clear();
         this.stopwords=stopwords;
-        for(int i=0; i<rfDocs.size(); i++){
-            String docName=extractName(rfDocs.get(i));
-            parsedDocs.put(docName, new ArrayList<String>());
-            parsedDocs.get(docName).add(docName);
-            split(extractText(rfDocs.get(i)),docName);
-        }
+        try {
+            PrintWriter writer = new PrintWriter(destinationDirectory + "/" + directory + "/" + "documents.txt", "UTF-8");
+            //create file to save document properties
+            File dir = new File(destinationDirectory + "/" + directory);
+            dir.mkdir();
+            //iterate over all docs, for each word in doc - parse and stem (if checked)
+            for(int i=0; i<rfDocs.size(); i++){
+                docNumber++;
+                numberOfTermsInDoc=0;
+                mostFrequentTerm="";
+                maxTF = new TermInDoc("null", 0, false);
+                docName=extractName(rfDocs.get(i));
+                //parsedDocs.put(docName, new ArrayList<String>());
+                //parsedDocs.get(docName).add(docName);
+                documentProperties.put(docName,docNumber+"");
+                split(extractText(rfDocs.get(i)),docName);
+
+                //write document properties
+                writer.println(docName+": "+numberOfTermsInDoc+", "+mostFrequentTerm+", "+maxTF.getTf()); //for each document save properties on disk
+                writer.flush();
+                writer.close();
+            }
+
+        }catch(Exception e){e.printStackTrace();};
     }
 
     public String extractText(String s){
@@ -59,7 +94,7 @@ public class Parser {
     public void split(String text, String i) {
 
         String[] splited = text.split("\\-+|\\s+|\\\n+|\\(+|\\)+|\\;+|\\:+|\\?+|\\!+|\\<+|\\>+|\\}+|\\{+|\\]+|\\[+|\\*+|\\++|\\|+|\\\"+|\\=+|\\#+|\\`+|\\\\+");
-       // String[] splited = regex.split(text);
+        // String[] splited = regex.split(text);
 
         int splitedlen = splited.length;
 
@@ -147,13 +182,13 @@ public class Parser {
                         String expression = builder.toString();
                         //save expression
                         if (!stopwords.containsKey(expression)) {
-                            parsedDocs.get(i).add(expression);
+                            stemWord(expression);
                         }
                         //save each word in expression
                         if (index != j) {
                             for (String s : expression.split(" ")) {
                                 if (!stopwords.containsKey(s)) {
-                                    parsedDocs.get(i).add(s);
+                                    stemWord(s);
                                 }
                             }
                             j = index;
@@ -184,19 +219,19 @@ public class Parser {
                                     if (splitedlen > j + 2 && isNumeric(temp) && temp.length() == 4) {
                                         //save as date
                                         splited[j + 2] = temp;
-                                        parsedDocs.get(i).add(splited[j + 1] + "/" + months.get(splitedStringj) + "/" + splited[j + 2]);
+                                        stemWord(splited[j + 1] + "/" + months.get(splitedStringj) + "/" + splited[j + 2]);
                                         j += 2;
                                     }
                                     //no year, only month and day
                                     else {
-                                        parsedDocs.get(i).add(splited[j + 1] + "/" + months.get(splitedStringj));
+                                        stemWord(splited[j + 1] + "/" + months.get(splitedStringj));
                                         j++;
                                     }
                                 }
 
                                 //MONTH YYYY -> MM/YYYY
                                 else if (splitedlen > j + 1 && ((isNumeric(splited[j + 1]) && (splitedj1 == 4)))) {
-                                    parsedDocs.get(i).add(months.get(splitedStringj) + "/" + splited[j + 1]);
+                                    stemWord(months.get(splitedStringj) + "/" + splited[j + 1]);
                                     j++;
                                 }
                             }
@@ -252,24 +287,24 @@ public class Parser {
                                 if (splitedlen > j + 2 && isNumeric(temp) && temp.length() == 4) {
                                     splited[j + 2] = temp;
                                     //save as date - DD MONTH YYYY -> DD/MM/YYYY
-                                    parsedDocs.get(i).add(splitedStringj + "/" + months.get(splited[j + 1]) + "/" + splited[j + 2]);
+                                    stemWord(splitedStringj + "/" + months.get(splited[j + 1]) + "/" + splited[j + 2]);
                                     j += 2;
                                 }
                                 //if year is written in short (YY)
                                 else if (splitedlen > j + 2 && isNumeric(temp) && temp.length() == 2) {
                                     //save as date - DD MONTH YY -> DD/MM/YYYY
                                     splited[j + 2] = temp;
-                                    parsedDocs.get(i).add(splitedStringj + "/" + months.get(splited[j + 1]) + "/" + "19" + splited[j + 2]);
+                                    stemWord(splitedStringj + "/" + months.get(splited[j + 1]) + "/" + "19" + splited[j + 2]);
                                     j += 2;
                                 } else {
                                     //save as date - DD MONTH -> DD/MM
-                                    parsedDocs.get(i).add(splitedStringj + "/" + months.get(splited[j + 1]));
+                                    stemWord(splitedStringj + "/" + months.get(splited[j + 1]));
                                     j++;
                                 }
                             }
                         } else { //current word isnt connected to a date, save it
                             if (!stopwords.containsKey(splitedStringj)) {
-                                parsedDocs.get(i).add(splitedStringj.toLowerCase());
+                                stemWord(splitedStringj.toLowerCase());
                             }
                         }
                     }
@@ -310,12 +345,12 @@ public class Parser {
 
                         //is percent (word)
                         if (splitedlen > j + 1 && (splited[j + 1].equals("percent") || splited[j + 1].equals("percentage"))) {
-                            parsedDocs.get(i).add(splitedStringj + " percent");
+                            stemWord(splitedStringj + " percent");
                             j++;
                         }
                         //number without percent
                         else{
-                            parsedDocs.get(i).add(splitedStringj);
+                            stemWord(splitedStringj);
                         }
                     }
                     //is percent
@@ -345,9 +380,9 @@ public class Parser {
                                 splitedj--;
                             }
                             //save as percent
-                            parsedDocs.get(i).add(splitedStringj + " percent");
+                            stemWord(splitedStringj + " percent");
                         } else { //not a decimal number
-                            parsedDocs.get(i).add(splitedStringj + " percent");
+                            stemWord(splitedStringj + " percent");
                         }
                     }
 
@@ -368,12 +403,12 @@ public class Parser {
                                 }*/
                                 tempNoCommas=round(tempNoCommas);
                             }
-                            parsedDocs.get(i).add(tempNoCommas);
+                            stemWord(tempNoCommas);
                         }
                     } else { //regular word - save it
 
                         if (!stopwords.containsKey(splitedStringj)) {
-                            parsedDocs.get(i).add(splitedStringj.toLowerCase());
+                            stemWord(splitedStringj.toLowerCase());
                         }
                     }
 
@@ -433,15 +468,7 @@ public class Parser {
             if (s.endsWith("'s") || s.endsWith("'S")) {
                 s = s.substring(0, s.length() - 2);
             }
-      /*      if (isNumeric(s)) {
-                if (s.endsWith("f") || s.endsWith("d") || s.endsWith("D") || s.endsWith("F")) {
-                    s = s.substring(0, s.length() - 1);
-                }
-                if (s.endsWith(".d") || s.endsWith(".D")) {
-                    s = s.substring(0, s.length() - 2);
-                }*/
 
-         //   }
         }
         if(whitespaces.containsKey(s)){
             s="";
@@ -477,6 +504,71 @@ public class Parser {
             return false;
         }
         return true;
+    }
+
+    //destination directory for all files to be saved in
+    public void setDestinationDirectory(String destinationDirectory){
+        this.destinationDirectory=destinationDirectory;
+    }
+    //directory for with stemming files or without stemming files
+    public void setDirectory(String directory){
+        this.directory=directory;
+    }
+
+    public void setWithStemming(boolean withStemming){
+        this.withStemming=withStemming;
+    }
+    public void stemWord(String word){
+
+        numberOfTermsInDoc++; //number of terms in current document BEFORE stem
+        String term="";
+        if(withStemming) {
+            if (!beforeAfterStem.containsKey(word)) {
+                stemmer.add(word.toCharArray(), word.length());
+                stemmer.stem();
+                term = stemmer.toString();
+                beforeAfterStem.put(word, term);
+            } else {
+                term = beforeAfterStem.get(word);
+            }
+        }
+        else{
+            term=word;
+        }
+
+        //if term is new in hashmap
+        if (!stemmedTerms.containsKey(term)) {
+            TermInDoc tid = new TermInDoc(docName, 1, false);
+            if (numberOfTermsInDoc < 100) {
+                tid.setInFirst100Terms(true);
+            }
+            HashMap<String, TermInDoc> map = new HashMap<>();
+            map.put(docName, tid);
+            stemmedTerms.put(term, map);
+            if (tid.getTf() > maxTF.getTf()) {
+                maxTF = tid;
+                mostFrequentTerm=term;
+            }
+        }
+        //term appears in hashmap
+        else {
+            //if doc appears in stemmed term - update TF
+            if (stemmedTerms.get(term).containsKey((docName))) {
+                (stemmedTerms.get(term)).get(docName).setTf();
+            }
+            //if doc doesnt appear in stemmed term, create new TermInDoc entry
+            else {
+                stemmedTerms.get(term).put(docName, new TermInDoc(docName, 1, false));
+                if (numberOfTermsInDoc < 100) {
+                    stemmedTerms.get(term).get(docName).setInFirst100Terms(true);
+                }
+            }
+            if (stemmedTerms.get(term).get(docName).getTf() > maxTF.getTf()) {
+                maxTF = stemmedTerms.get(term).get(docName);
+                mostFrequentTerm=term;
+            }
+        }
+
     }
 
 
