@@ -6,7 +6,7 @@ public class TermInDictionairy implements Comparable, Serializable{
 
     int totalOccurencesInCorpus;
     int pointerToPosting;
-    HashMap<TermInDoc,String> pointerToTermInCache;
+    String pointerToTermInCache;
     int numberOfDocumentsOccuresIn;
     String term;
 
@@ -23,11 +23,21 @@ public class TermInDictionairy implements Comparable, Serializable{
 
     }
 
-    public HashMap<TermInDoc,String> getPointerToTermInCache() {
+    @Override
+    public int hashCode() {
+        return term.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return term + ": "+getTotalOccurencesInCorpus()+" Occurrences in Corpus";
+    }
+
+    public String getPointerToTermInCache() {
         return pointerToTermInCache;
     }
 
-    public void setPointerToTermInCache(HashMap<TermInDoc,String> pointerToTermInCache) {
+    public void setPointerToTermInCache(String pointerToTermInCache) {
         this.pointerToTermInCache = pointerToTermInCache;
     }
     public int getTotalOccurencesInCorpus() {

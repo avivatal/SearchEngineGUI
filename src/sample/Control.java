@@ -74,6 +74,7 @@ public class Control {
     }
 
     public void merge(){
+        parser.writer.close();
         indexer.mergeTempPostings();
     }
 

@@ -12,7 +12,7 @@ public class Parser {
     HashMap<String, String > months;
     HashMap<String,String> whitespaces;
     HashMap<String,String> stopwords;
-    Stemmer stemmer = new Stemmer();
+    Stemmer stemmer;
     String destinationDirectory;
     HashMap<String, String> beforeAfterStem;
     String directory; //with/without stem directory
@@ -24,10 +24,13 @@ public class Parser {
     HashMap<String,String> documentProperties; //pointer for each doc to the line number of the doc properties saved in disk.
     int docNumber; //counter for documents
     boolean withStemming;
+    PrintWriter writer;
     // Pattern regex;
 
     public Parser() {
         stemmedTerms=new HashMap<>();
+        stemmer=new Stemmer();
+        beforeAfterStem=new HashMap<>();
         documentProperties=new HashMap<>();
         docNumber=0;
         numberOfTermsInDoc=0;
@@ -42,6 +45,14 @@ public class Parser {
         //   regex=Pattern.compile("\\-+|\\s+|\\\n+|\\(+|\\)+|\\;+|\\:+|\\?+|\\!+|\\<+|\\>+|\\}+|\\{+|\\]+|\\[+|\\*+|\\++|\\|+|\\\"+|\\=+|\\#+|\\`+|\\\\+");
     }
 
+    public void setWriter(){
+        try {
+            File dir = new File(destinationDirectory + "/" + directory);
+            dir.mkdir();
+            writer = new PrintWriter(destinationDirectory + "/" + directory + "/" + "documents.txt", "UTF-8");
+        }catch(Exception e){}
+    }
+
     public HashMap<String, HashMap<String,TermInDoc>> getStemmedTerms() {
         return stemmedTerms;
     }
@@ -50,10 +61,7 @@ public class Parser {
         stemmedTerms.clear();
         this.stopwords=stopwords;
         try {
-            PrintWriter writer = new PrintWriter(destinationDirectory + "/" + directory + "/" + "documents.txt", "UTF-8");
-            //create file to save document properties
-            File dir = new File(destinationDirectory + "/" + directory);
-            dir.mkdir();
+            //PrintWriter writer = new PrintWriter(destinationDirectory + "/" + directory + "/" + "documents.txt", "UTF-8");
             //iterate over all docs, for each word in doc - parse and stem (if checked)
             for(int i=0; i<rfDocs.size(); i++){
                 docNumber++;
@@ -69,7 +77,6 @@ public class Parser {
                 //write document properties
                 writer.println(docName+": "+numberOfTermsInDoc+", "+mostFrequentTerm+", "+maxTF.getTf()); //for each document save properties on disk
                 writer.flush();
-                writer.close();
             }
 
         }catch(Exception e){e.printStackTrace();};
@@ -135,7 +142,7 @@ public class Parser {
                             //if next word starts with uppercase and isnt a month
                             if (splitedlen > index + 1 && splited[index + 1].length() > 0 && Character.isUpperCase(splited[index + 1].charAt(0)) && !months.containsKey(splited[index + 1])) {
 
-                                if (splitedlen > index + 1 && whitespaces.containsKey(splited[index + 1].substring(splited[index + 1].length() - 1))) {
+                                if ( whitespaces.containsKey(splited[index + 1].substring(splited[index + 1].length() - 1))) {
                                     bool = false;
                                     splited[index + 1] = cleanFromStart(cleanFromEnd(splited[index + 1]));
                                     if (splitedlen > j + 1) {
@@ -200,12 +207,12 @@ public class Parser {
                             tmp = cleanFromStart(cleanFromEnd(splited[j + 1]));
 
                             //check if next string is day or year
-                            if (splitedlen > j + 1 && isNumeric(tmp)) {
+                            if (isNumeric(tmp)) {
                                 splited[j + 1] = tmp;
                                 splitedj1 = splited[j + 1].length();
 
                                 //MONTH DD -> DD/MM *OR* MONTH DD YYYY -> DD/MM/YYYY
-                                if (Double.parseDouble(splited[j + 1]) > 0 && Double.parseDouble(splited[j + 1]) < 32) {
+                                if (Integer.parseInt(splited[j + 1]) > 0 && Integer.parseInt(splited[j + 1]) < 32) {
                                     if (splitedj1 == 1) {
                                         splited[j + 1] = "0" + splited[j + 1];
                                     }
@@ -230,7 +237,7 @@ public class Parser {
                                 }
 
                                 //MONTH YYYY -> MM/YYYY
-                                else if (splitedlen > j + 1 && ((isNumeric(splited[j + 1]) && (splitedj1 == 4)))) {
+                                else if (((isNumeric(splited[j + 1]) && (splitedj1 == 4)))) {
                                     stemWord(months.get(splitedStringj) + "/" + splited[j + 1]);
                                     j++;
                                 }
@@ -272,7 +279,7 @@ public class Parser {
                             }
                         }
                         if (isNumeric(splitedStringj)) {
-                            if (!splitedStringj.contains(".") && Integer.parseInt(splitedStringj) > 0 && Integer.parseInt(splitedStringj) < 32) { //check if day
+                            if (Integer.parseInt(splitedStringj) > 0 && Integer.parseInt(splitedStringj) < 32) { //check if day
                                 //add zero if D and not DD
                                 if (splitedj == 1) {
                                     splited[j] = "0" + splitedStringj;
@@ -312,7 +319,7 @@ public class Parser {
                     //***********END DATES CHECK*****************
 
                     //***********NUMBERS***************
-                    else if (isNumeric(splitedStringj) || isDecimal(splitedStringj)) {
+                    else if (isDecimal(splitedStringj)) {
 
                         //is decimal number
                         if (splitedStringj.contains(".")) {

@@ -7,6 +7,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
@@ -57,20 +58,19 @@ public class Controller {
     }
 
     private int calculateNumOfDocs(){
-        return rf.getCounter();
+        return rf.ctrl.parser.docNumber;
     }
 
 
 
     private long calcCacheSize(){
-        return 0;
-       // return ObjectSizeFetcher.getObjectSize(rf.ctrl.indexer.cache.getCache())+ObjectSizeFetcher.getObjectSize(rf.ctrl.indexer.cache.getPointersToPosting());
+        File file = new File(destinationDirectory+"/"+rf.ctrl.getDirectory()+"/cacheTxt.txt");
+        return file.length();
     }
 
     private long calcDictionairySize(){
-        return 0;
-       /* ObjectSizeFetcher o =new ObjectSizeFetcher();
-        return o.getObjectSize(rf.ctrl.indexer.dictionairy);*/
+        File file = new File(destinationDirectory+"/"+rf.ctrl.getDirectory()+"/dictionairyTxt.txt");
+        return file.length();
     }
 
     private long calcPostingSize(){
@@ -89,37 +89,44 @@ public class Controller {
 
     public void browseCorpus(){
 
-        DirectoryChooser chooser = new DirectoryChooser();
-        chooser.setTitle("Browse");
-        File selectedDirectory = chooser.showDialog(stage);
-        corpusPath=(selectedDirectory.toString());
-        corpBrowse.setText(selectedDirectory.toString());
-
+        try {
+            DirectoryChooser chooser = new DirectoryChooser();
+            chooser.setTitle("Browse");
+            File selectedDirectory = chooser.showDialog(stage);
+            corpusPath = (selectedDirectory.toString());
+            corpBrowse.setText(selectedDirectory.toString());
+        }catch (Exception e){}
 
     }
     public void browseDest(){
+        try {
+            DirectoryChooser chooser = new DirectoryChooser();
+            chooser.setTitle("Browse");
+            File selectedDirectory = chooser.showDialog(stage);
+            destinationDirectory = (selectedDirectory.toString());
+            destBrowse.setText(selectedDirectory.toString());
+        }catch (Exception e){}
 
-        DirectoryChooser chooser = new DirectoryChooser();
-        chooser.setTitle("Browse");
-        File selectedDirectory = chooser.showDialog(stage);
-        destinationDirectory=(selectedDirectory.toString());
-        destBrowse.setText(selectedDirectory.toString());
     }
 
     public void browsesave(){
-        DirectoryChooser chooser = new DirectoryChooser();
-        chooser.setTitle("Save");
-        File selectedDirectory = chooser.showDialog(stage);
-        savePath=selectedDirectory.toString();
-        savetxt.setText(savePath);
+        try {
+            DirectoryChooser chooser = new DirectoryChooser();
+            chooser.setTitle("Save");
+            File selectedDirectory = chooser.showDialog(stage);
+            savePath = selectedDirectory.toString();
+            savetxt.setText(savePath);
+        }catch (Exception e){}
     }
 
     public void browseload(){
-        DirectoryChooser chooser = new DirectoryChooser();
-        chooser.setTitle("Load");
-        File selectedDirectory = chooser.showDialog(stage);
-        loadPath=selectedDirectory.toString();
-        loadtxt.setText(loadPath);
+        try {
+            DirectoryChooser chooser = new DirectoryChooser();
+            chooser.setTitle("Load");
+            File selectedDirectory = chooser.showDialog(stage);
+            loadPath = selectedDirectory.toString();
+            loadtxt.setText(loadPath);
+        }catch (Exception e){}
     }
 
     public void save(){
@@ -130,12 +137,12 @@ public class Controller {
                     if(savePath==null){
                         savePath=destinationDirectory;
                     }
-                    ObjectOutputStream outCache = new ObjectOutputStream(new FileOutputStream(savePath+"/"+rf.ctrl.getDirectory()+"/cache.ser"));
+                    ObjectOutputStream outCache = new ObjectOutputStream(new FileOutputStream(savePath+"/cache.ser"));
                     outCache.writeObject(rf.ctrl.indexer.cache);
                     outCache.flush();
                     outCache.close();
 
-                    ObjectOutputStream outDict = new ObjectOutputStream(new FileOutputStream(savePath+"/"+rf.ctrl.getDirectory()+"/dictionairy.ser"));
+                    ObjectOutputStream outDict = new ObjectOutputStream(new FileOutputStream(savePath+"/dictionairy.ser"));
                     outDict.writeObject(rf.ctrl.indexer.dictionairy);
                     outDict.flush();
                     outDict.close();
@@ -146,6 +153,9 @@ public class Controller {
 
                 } catch (Exception e) {
                     e.printStackTrace();
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setContentText("Please Enter a Path");
+                    alert.show();;
                 }
             }});
     }
@@ -169,7 +179,9 @@ public class Controller {
             alert.show();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setContentText("Please Enter a Path");
+            alert.show();;
         }
         //    }});
     }
@@ -196,7 +208,10 @@ public class Controller {
                     rf.setDestinationDirectory(destinationDirectory);
                     rf.setStopwordsPath(corpusPath+"/stop_words");
                     rf.setCtrl();
+                    rf.ctrl.parser.setWriter();
                     rf.read(corpusPath+"/corpus");
+                    saveCacheToText();
+                    saveDictToText();
                     btn_start.setDisable(false);
                     btn_reset.setDisable(false);
                     browse1.setDisable(false);
@@ -204,14 +219,14 @@ public class Controller {
 
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setContentText("Indexing Process has Completed\n"
-                            +"Dictionairy Size is: "+calcDictionairySize()
-                            +"\nPosting Size is: "+calcPostingSize()+
-                            "\nCache Size is: "+calcCacheSize()+
+                            +"Dictionairy Size is: "+calcDictionairySize()+" bytes"
+                            +"\nPosting Size is: "+calcPostingSize()+" bytes"+
+                            "\nCache Size is: "+calcCacheSize()+" bytes"+
                             "\nNumber of documents indexed: "+calculateNumOfDocs());
                     alert.show();
 
                 }catch (NullPointerException e){
-                    //     e.printStackTrace();
+                         e.printStackTrace();
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setContentText("File Path Invalid");
                     alert.show();
@@ -221,7 +236,7 @@ public class Controller {
                     browse2.setDisable(false);
                 }
                 catch (FileNotFoundException e){
-                    //    e.printStackTrace();
+                        e.printStackTrace();
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setContentText("File Path Invalid");
                     alert.show();
@@ -245,6 +260,33 @@ public class Controller {
      /*   Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setContentText("Indexing Process has Completed");
         alert.show();*/
+    }
+
+    public void saveCacheToText(){
+        try {
+            File cache = new File(destinationDirectory + "/" + rf.ctrl.getDirectory() + "/cacheTxt.txt");
+            PrintWriter writer = new PrintWriter(cache);
+            HashMap<String, String> currentCache = rf.ctrl.indexer.cache.getCache();
+            SortedSet<String> sortedKeys = new TreeSet<String>(currentCache.keySet());
+            for (String term : sortedKeys) {
+                writer.println(term + ": " + currentCache.get(term));
+                writer.flush();
+            }
+            writer.close();
+        }catch (Exception e){}
+    }
+    public void saveDictToText(){
+        try {
+            File dict = new File(destinationDirectory + "/" + rf.ctrl.getDirectory() + "/dictionairyTxt.txt");
+            PrintWriter writer = new PrintWriter(dict);
+            HashMap<String,TermInDictionairy> currentDict = rf.ctrl.indexer.getDictionairy();
+            SortedSet<String> sortedKeys = new TreeSet<String>(currentDict.keySet());
+            for (String term : sortedKeys) {
+                writer.println(currentDict.get(term).toString());
+                writer.flush();
+            }
+            writer.close();
+        }catch (Exception e){}
     }
 
     public void reset(){
@@ -283,6 +325,12 @@ public class Controller {
                 }
                 noStem.delete();
             }
+            if(savePath!=null){
+                File cache = new File(savePath+"/"+rf.ctrl.getDirectory()+"/cache.ser");
+                File dict = new File(savePath+"/"+rf.ctrl.getDirectory()+"/dictionairy.ser");
+                cache.delete();
+                dict.delete();
+            }
             rf=new ReadFile();
 
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -314,7 +362,7 @@ public class Controller {
             cacheB.setDisable(true);
             dictB.setDisable(true);
 
-            HashMap<String, HashMap<TermInDoc,String>> cache = rf.ctrl.indexer.cache.getCache();
+            HashMap<String, String> cache = rf.ctrl.indexer.cache.getCache();
 
             //sort the terms in the cache lexicographically
             SortedSet<String> sortedKeys = new TreeSet<String>(cache.keySet());
@@ -323,13 +371,13 @@ public class Controller {
             ObservableList<String> items= FXCollections.observableArrayList();
             int counter=1;
             for (String term : sortedKeys) {
-                StringBuilder cacheDetails = new StringBuilder();
+                /*StringBuilder cacheDetails = new StringBuilder();
                 cacheDetails.append(counter+") "+term + ": ");
                 for (TermInDoc tid : cache.get(term).keySet()) {
                     cacheDetails.append(tid.toString());
 
-                }
-                items.add(cacheDetails.toString());
+                }*/
+                items.add(term+ ": "+cache.get(term));
                 counter++;
                 //  cacheDetails.append("\n");
             }

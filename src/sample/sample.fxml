@@ -75,7 +75,7 @@
             </Button>
          </children>
       </VBox>
-      <CheckBox fx:id="stembox" mnemonicParsing="false" text="Index with Stemming" GridPane.rowIndex="2">
+      <CheckBox fx:id="stembox" mnemonicParsing="false" selected="true" text="Index with Stemming" GridPane.rowIndex="2">
          <GridPane.margin>
             <Insets left="10.0" />
          </GridPane.margin>
