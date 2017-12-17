@@ -1,26 +1,19 @@
 package sample;
 
 import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
-import java.awt.event.ActionEvent;
-import java.beans.EventHandler;
 import java.io.*;
 
-import java.lang.instrument.Instrumentation;
 import java.util.*;
-import java.util.jar.JarFile;
 
 import javafx.scene.control.Alert;
 //import jdk.nashorn.internal.ir.debug.ObjectSizeCalculator;
@@ -57,22 +50,41 @@ public class Controller {
         rf=new ReadFile();
     }
 
+    /**
+     * calculates how many documents have been indexed overall
+     * @return number of indexed documents
+     */
     private int calculateNumOfDocs(){
         return rf.ctrl.parser.docNumber;
     }
 
 
-
+    /**
+     * writes the cache object to the disk in order to calculate the object size. Once calculated the file is deleted.
+     * @return the size of the cache object.
+     */
     private long calcCacheSize(){
-        File file = new File(destinationDirectory+"/"+rf.ctrl.getDirectory()+"/cacheTxt.txt");
-        return file.length();
+        File file = new File(destinationDirectory+"/"+rf.ctrl.getDirectory()+"/cache.ser");
+        long ans = file.length();
+        file.delete();
+        return ans;
     }
 
+    /**
+     * writes the dictionary object to the disk in order to calculate the object size. Once calculated the file is deleted.
+     * @return the size of the dictionary object.
+     */
     private long calcDictionairySize(){
-        File file = new File(destinationDirectory+"/"+rf.ctrl.getDirectory()+"/dictionairyTxt.txt");
-        return file.length();
+        File file = new File(destinationDirectory+"/"+rf.ctrl.getDirectory()+"/dictionairy.ser");
+        long ans = file.length();
+        file.delete();
+        return ans;
     }
 
+    /**
+     * calculates the size of all posting documents
+     * @return total posting size
+     */
     private long calcPostingSize(){
         File dir = new File(destinationDirectory+"/"+rf.ctrl.getDirectory());
         long length = 0;
@@ -83,10 +95,18 @@ public class Controller {
         return length;
     }
 
+    /**
+     * updates the stage to the stage created in the main
+     * @param primaryStage the main stage of the GUI
+     */
     public void setStage(Stage primaryStage){
         stage=primaryStage;
     }
 
+
+    /**
+     * opens a directory chooser to select the directory which the corpus is in
+     */
     public void browseCorpus(){
 
         try {
@@ -98,6 +118,10 @@ public class Controller {
         }catch (Exception e){}
 
     }
+
+    /**
+     * opens a directory chooser to select the directory to save the posting files in
+     */
     public void browseDest(){
         try {
             DirectoryChooser chooser = new DirectoryChooser();
@@ -109,6 +133,9 @@ public class Controller {
 
     }
 
+    /**
+     * opens a directory chooser to select the directory to save the cache and dictionary in
+     */
     public void browsesave(){
         try {
             DirectoryChooser chooser = new DirectoryChooser();
@@ -119,6 +146,9 @@ public class Controller {
         }catch (Exception e){}
     }
 
+    /**
+     * opens a directory chooser to select the directory to load the cache and dictionary from
+     */
     public void browseload(){
         try {
             DirectoryChooser chooser = new DirectoryChooser();
@@ -129,6 +159,10 @@ public class Controller {
         }catch (Exception e){}
     }
 
+    /**
+     * saves the cache and the dictionary in the selected path by writing the objects into a .ser file.
+     * According to the stem checkbox selection, will save with appropriate file name to avoid overriding.
+     */
     public void save(){
         Platform.runLater(new Runnable(){
             @Override
@@ -137,12 +171,22 @@ public class Controller {
                     if(savePath==null){
                         savePath=destinationDirectory;
                     }
-                    ObjectOutputStream outCache = new ObjectOutputStream(new FileOutputStream(savePath+"/cache.ser"));
+                    String cache;
+                    String dict;
+                    if(stembox.isSelected()){
+                         cache = "/cacheStemmed.ser";
+                         dict = "/dictionairyStemmed.ser";
+                    }else{
+                         cache = "/cacheNotStemmed.ser";
+                         dict = "/dictionairyNotStemmed.ser";
+                    }
+
+                    ObjectOutputStream outCache = new ObjectOutputStream(new FileOutputStream(savePath+cache));
                     outCache.writeObject(rf.ctrl.indexer.cache);
                     outCache.flush();
                     outCache.close();
 
-                    ObjectOutputStream outDict = new ObjectOutputStream(new FileOutputStream(savePath+"/dictionairy.ser"));
+                    ObjectOutputStream outDict = new ObjectOutputStream(new FileOutputStream(savePath+dict));
                     outDict.writeObject(rf.ctrl.indexer.dictionairy);
                     outDict.flush();
                     outDict.close();
@@ -152,7 +196,6 @@ public class Controller {
                     alert.show();
 
                 } catch (Exception e) {
-                    e.printStackTrace();
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setContentText("Please Enter a Path");
                     alert.show();;
@@ -160,17 +203,30 @@ public class Controller {
             }});
     }
 
+    /**
+     * loads the cache and the dictionary from the selected path - reads from a .ser object into RAM.
+     * the files names that are read from are according to the stem checkbox selection
+     */
     public void load(){
         //  Platform.runLater(new Runnable(){
         //    @Override
         //    public void run() {
         try {
-            ObjectInputStream inCache = new ObjectInputStream(new FileInputStream(loadPath+"/cache.ser"));
+            String cachepath;
+            String dict;
+            if(stembox.isSelected()){
+                cachepath = "/cacheStemmed.ser";
+                dict = "/dictionairyStemmed.ser";
+            }else{
+                cachepath = "/cacheNotStemmed.ser";
+                dict = "/dictionairyNotStemmed.ser";
+            }
+            ObjectInputStream inCache = new ObjectInputStream(new FileInputStream((loadPath+cachepath)));
             Cache cache = (Cache) inCache.readObject();
             inCache.close();
             rf.ctrl.indexer.cache=cache;
 
-            ObjectInputStream inDict = new ObjectInputStream(new FileInputStream(loadPath+"/dictionairy.ser"));
+            ObjectInputStream inDict = new ObjectInputStream(new FileInputStream(loadPath+dict));
             rf.ctrl.indexer.dictionairy = (HashMap<String,TermInDictionairy>)inDict.readObject();
             inDict.close();
 
@@ -180,38 +236,54 @@ public class Controller {
 
         } catch (Exception e) {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setContentText("Please Enter a Path");
+            alert.setContentText("Please Enter a Valid Path");
             alert.show();;
         }
         //    }});
     }
 
 
+    /**
+     * activates the indexing process - starting with reading the files, parsing them (with or without stemming) and finally indexing them.
+     */
     public void run(){
         Platform.runLater(new Runnable(){
             @Override
             public void run(){
                 try {
-
+                    //disable buttons
                     btn_start.setDisable(true);
                     btn_reset.setDisable(true);
                     browse1.setDisable(true);
                     browse2.setDisable(true);
+
+                    //if paths not browsed, checks if path was manually entered
                     if(corpusPath.toString().length()==0){
                         corpusPath=corpBrowse.getText();
                     }
                     if(destinationDirectory.toString().length()==0){
                         destinationDirectory=destBrowse.getText();
                     }
+
+                    //initialization of parameters that need to be set for each run
                     rf.ctrl.indexer.numberOfTempPostingFiles=0;
                     rf.ctrl.setWithStemming(stembox.isSelected());
                     rf.setDestinationDirectory(destinationDirectory);
-                    rf.setStopwordsPath(corpusPath+"/stop_words");
+                    rf.setStopwordsPath(corpusPath+"/stop_words.txt");
                     rf.setCtrl();
                     rf.ctrl.parser.setWriter();
+
+                    //read, parse, stem, index
                     rf.read(corpusPath+"/corpus");
-                    saveCacheToText();
-                    saveDictToText();
+
+                    //save cache and dictionary to calculate their sizes
+                    saveCacheToSer();
+                    saveDictToSer();
+
+                    saveDictForZipf();
+                    //saveDictTxt();
+
+                    //enable buttons
                     btn_start.setDisable(false);
                     btn_reset.setDisable(false);
                     browse1.setDisable(false);
@@ -262,33 +334,60 @@ public class Controller {
         alert.show();*/
     }
 
-    public void saveCacheToText(){
+    public void saveDictForZipf(){
         try {
-            File cache = new File(destinationDirectory + "/" + rf.ctrl.getDirectory() + "/cacheTxt.txt");
-            PrintWriter writer = new PrintWriter(cache);
-            HashMap<String, String> currentCache = rf.ctrl.indexer.cache.getCache();
-            SortedSet<String> sortedKeys = new TreeSet<String>(currentCache.keySet());
-            for (String term : sortedKeys) {
-                writer.println(term + ": " + currentCache.get(term));
-                writer.flush();
+
+            PrintWriter writerzipf = new PrintWriter(destinationDirectory + "/zipf.txt", "UTF-8");
+            PrintWriter writertxt = new PrintWriter(destinationDirectory + "/dictext.txt", "UTF-8");
+            HashMap<String,TermInDictionairy> dict = rf.ctrl.indexer.dictionairy;
+            for(TermInDictionairy tid : dict.values()){
+                writerzipf.println(tid.term+","+tid.totalOccurencesInCorpus);
+                writertxt.println(tid.toString());
             }
-            writer.close();
+            SortedSet<String> sortedKeys = new TreeSet<String>(dict.keySet());
+
+            ObservableList<String> items= FXCollections.observableArrayList();
+            int counter=1;
+            for (String term : sortedKeys) {
+                StringBuilder TermDetails = new StringBuilder();
+                items.add(term+","+dict.get(term).getTotalOccurencesInCorpus());
+                counter++;
+            }
+
         }catch (Exception e){}
     }
-    public void saveDictToText(){
+    /**
+     * saves the cache from the last run into a serializable file - later used to calculate its size
+     */
+    public void saveCacheToSer(){
         try {
-            File dict = new File(destinationDirectory + "/" + rf.ctrl.getDirectory() + "/dictionairyTxt.txt");
-            PrintWriter writer = new PrintWriter(dict);
-            HashMap<String,TermInDictionairy> currentDict = rf.ctrl.indexer.getDictionairy();
-            SortedSet<String> sortedKeys = new TreeSet<String>(currentDict.keySet());
-            for (String term : sortedKeys) {
-                writer.println(currentDict.get(term).toString());
-                writer.flush();
-            }
-            writer.close();
+            File cache = new File(destinationDirectory + "/" + rf.ctrl.getDirectory() + "/cache.ser");
+            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(cache));
+            out.writeObject(rf.ctrl.indexer.cache);
+            out.flush();
+            out.close();
         }catch (Exception e){}
     }
 
+    /**
+     * saves the dictionary from the last run into a serializable file - later used to calculate its size
+     */
+    public void saveDictToSer(){
+        try {
+            File dict = new File(destinationDirectory + "/" + rf.ctrl.getDirectory() + "/dictionairy.ser");
+            ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(dict));
+            out.writeObject(rf.ctrl.indexer.getDictionairy());
+            out.flush();
+            out.close();
+        }catch (Exception e){}
+    }
+
+
+    /**
+     * deletes from disk all posting files, both with or without stemming.
+     * if there is a save or load path, deletes cache and dictionary files from there
+     * initializes the ReadFile property to a new one
+     */
     public void reset(){
 
         if(destinationDirectory!=null) {
@@ -298,17 +397,8 @@ public class Controller {
             browse2.setDisable(true);
             cacheB.setDisable(true);
             dictB.setDisable(true);
-//DELETE THE DIRECTORIES
-          /*      char c = 'a';
-                while (c <= 'z') {
-                    File posting = new File(destinationDirectory + "/" + c + ".txt");
-                    posting.delete();
-                    c++;
-                }
-                File nonLetters = new File(destinationDirectory + "/nonLetters.txt");
-                File documents = new File(destinationDirectory + "/documents.txt");
-                nonLetters.delete();
-                documents.delete();*/
+
+            //DELETE THE DIRECTORIES
             File withStem = new File(destinationDirectory + "/withStem");
             File noStem = new File(destinationDirectory + "/noStem");
             if(withStem.exists()){
@@ -325,12 +415,30 @@ public class Controller {
                 }
                 noStem.delete();
             }
+
+            //delete cache and dictionary from load/save paths
             if(savePath!=null){
-                File cache = new File(savePath+"/"+rf.ctrl.getDirectory()+"/cache.ser");
-                File dict = new File(savePath+"/"+rf.ctrl.getDirectory()+"/dictionairy.ser");
-                cache.delete();
-                dict.delete();
+                File cachestemmed = new File(savePath+"/cacheStemmed.ser");
+                File dictStemmed = new File(savePath+"/dictionairyStemmed.ser");
+                File cacheNotstemmed = new File(savePath+"/cacheNotStemmed.ser");
+                File dictNotStemmed = new File(savePath+"/dictionairyNotStemmed.ser");
+                cachestemmed.delete();
+                dictStemmed.delete();
+                cacheNotstemmed.delete();
+                dictNotStemmed.delete();
             }
+            if(loadPath!=null){
+                File cachestemmed = new File(loadPath+"/cacheStemmed.ser");
+                File dictStemmed = new File(loadPath+"/dictionairyStemmed.ser");
+                File cacheNotstemmed = new File(loadPath+"/cacheNotStemmed.ser");
+                File dictNotStemmed = new File(loadPath+"/dictionairyNotStemmed.ser");
+                cachestemmed.delete();
+                dictStemmed.delete();
+                cacheNotstemmed.delete();
+                dictNotStemmed.delete();
+            }
+
+            //delete from RAM
             rf=new ReadFile();
 
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -352,6 +460,9 @@ public class Controller {
 
     }
 
+    /**
+     * displays the current cache from the recent run as a list of all the terms and the posting entries saved in cache
+     */
     public void displayCache() {
 
         try {
@@ -364,22 +475,26 @@ public class Controller {
 
             HashMap<String, String> cache = rf.ctrl.indexer.cache.getCache();
 
+            if(cache.size()==0){
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setContentText("Must Index or Load Cache First In Order to Display Cache!");
+                alert.show();
+                btn_start.setDisable(false);
+                btn_reset.setDisable(false);
+                browse1.setDisable(false);
+                browse2.setDisable(false);
+                cacheB.setDisable(false);
+                dictB.setDisable(false);
+            }
+            else{
             //sort the terms in the cache lexicographically
             SortedSet<String> sortedKeys = new TreeSet<String>(cache.keySet());
 
-            //   StringBuilder cacheDetails = new StringBuilder();
             ObservableList<String> items= FXCollections.observableArrayList();
             int counter=1;
             for (String term : sortedKeys) {
-                /*StringBuilder cacheDetails = new StringBuilder();
-                cacheDetails.append(counter+") "+term + ": ");
-                for (TermInDoc tid : cache.get(term).keySet()) {
-                    cacheDetails.append(tid.toString());
-
-                }*/
                 items.add(term+ ": "+cache.get(term));
                 counter++;
-                //  cacheDetails.append("\n");
             }
 
             Stage newstage = new Stage();
@@ -405,7 +520,7 @@ public class Controller {
             browse2.setDisable(false);
             cacheB.setDisable(false);
             dictB.setDisable(false);
-        }
+        }}
         catch (NullPointerException e){
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setContentText("Must Index First In Order to Display Cache!");
@@ -413,6 +528,9 @@ public class Controller {
         }
     }
 
+    /**
+     * displays the dictionary as a list of terms and their total number of occurrences in all the corpus
+     */
     public void displayDictionairy(){
 
         try {
@@ -424,7 +542,18 @@ public class Controller {
             dictB.setDisable(true);
 
             HashMap<String, TermInDictionairy> dictionairy = rf.ctrl.indexer.getDictionairy();
-
+            if(dictionairy.size()==0){
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setContentText("Must Index or Load Dictionary First In Order to Display Dictionary!");
+                alert.show();
+                btn_start.setDisable(false);
+                btn_reset.setDisable(false);
+                browse1.setDisable(false);
+                browse2.setDisable(false);
+                cacheB.setDisable(false);
+                dictB.setDisable(false);
+            }
+            else{
             //sort the terms in the cache lexicographically
             SortedSet<String> sortedKeys = new TreeSet<String>(dictionairy.keySet());
 
@@ -439,7 +568,7 @@ public class Controller {
             }
 
             Stage newstage = new Stage();
-            newstage.setTitle("Cache");
+            newstage.setTitle("Dictionairy");
             BorderPane pane = new BorderPane();
             Scene scene = new Scene(pane);
             newstage.setScene(scene);
@@ -461,10 +590,10 @@ public class Controller {
             browse2.setDisable(false);
             cacheB.setDisable(false);
             dictB.setDisable(false);
-        }
+        }}
         catch (NullPointerException e){
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setContentText("Must Index First In Order to Display Cache!");
+            alert.setContentText("Must Index First In Order to Display Dictionary!");
             alert.show();
         }
     }

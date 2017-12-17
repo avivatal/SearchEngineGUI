@@ -4,24 +4,26 @@ import java.util.*;
 
 public class Cache implements Serializable {
 
-    HashSet<TermInDictionairy> queue;
-    //PriorityQueue<TermInDictionairy> queue;
+    HashSet<TermInDictionairy> queue; //terms that will be in the cache
     HashMap<String, String> cache; //term+posting lines
-    HashMap<String, String> pointersToPosting;
+    HashMap<String, String> pointersToPosting; //pointers from cache entry to posting entry
 
     public Cache() {
         queue=new HashSet<>();
         cache=new HashMap<>();
         pointersToPosting=new HashMap<>();
-       // queue=new HashMap<>();
     }
 
-    //get 10000 most popular words in corpus. Sorted by words that appear in the most amount of docs in corpus.
-    public void addDictionairy(HashMap<String,TermInDictionairy> dictionairy){
+    /**
+     * @param dictionary - the dictionary of the index containing entries of terms and its dictionary entry (TermInDictionary)
+     * gets the 10000 most popular words in corpus, sorted by words that appear in the most amount of docs in corpus.
+     * saves the words in the queue property.
+     */
+    public void addDictionary(HashMap<String,TermInDictionairy> dictionary){
         int maxCacheSize = 10000;
 
         List<TermInDictionairy> list = new ArrayList<>();
-        list.addAll(dictionairy.values());
+        list.addAll(dictionary.values());
         Collections.sort(list);
         int listlen=list.size();
         list = list.subList(listlen-maxCacheSize,listlen);
@@ -29,16 +31,23 @@ public class Cache implements Serializable {
 
     }
 
+    /**
+     * pointers to cache getter
+     * @return returns a map of terms and line numbers of the terms entry in the posting document.
+     */
     public HashMap<String, String> getPointersToPosting() {
         return pointersToPosting;
     }
 
-    //string to posting records in cache
+    /**
+     * gets a candidate to a cache entry. If the terms is in the queue, adds it to the cache.
+     * @param postingLine the final posting line containing the terms and all posting entries related to that word.
+     * @param linecounter the line number of the posting line in the posting document, used to update the pointer from the cache entry to the appropriate posting entry.
+     */
     public void getLine(String postingLine, int linecounter) {
         String term = postingLine.substring(0, postingLine.indexOf(':'));
         //if the word is one of the 10000 most popular words in corpus
         if (queue.contains(new TermInDictionairy(term))) {
-          //  PriorityQueue<TermInDoc> sortedTermsInDoc = new PriorityQueue<>();
             String line = postingLine.substring(postingLine.indexOf(':') + 3);
             int index=0;
             int bracket=0;
@@ -112,11 +121,10 @@ public class Cache implements Serializable {
     }
 
 
-
-
-
-
-    //cache is map of <term, list of termInDocs> - only relevant termInDocs
+    /**
+     * cache getter
+     * @return the cache - cache is map of <term, list of termInDocs> - only relevant termInDocs
+     */
     public HashMap<String, String> getCache() {
         return cache;
     }

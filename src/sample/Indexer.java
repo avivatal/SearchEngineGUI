@@ -11,11 +11,11 @@ import java.util.*;
 public class Indexer {
 
 
-    HashMap<String,TermInDictionairy> dictionairy;
-    int numberOfTempPostingFiles=0;
+    HashMap<String,TermInDictionairy> dictionairy; //terms and their dictionary entries
+    int numberOfTempPostingFiles=0; //number of temporary posting files created so far in current run
     Cache cache;
-    String destinationDirectory;
-    String directory;
+    String destinationDirectory; //directory of the stem/noStem directory
+    String directory;   //stem/noStem directory
 
     public Indexer() {
         dictionairy = new HashMap<>();
@@ -23,18 +23,38 @@ public class Indexer {
 
     }
 
+    /**
+     * sets the directory of the stem/noStem directory
+     * @param directory name of directory to save posting files in
+     */
     public void setDirectory(String directory) {
         this.directory = directory;
     }
 
+
+    /**
+     * sets the directory which the stem/noStem directories should be in
+     * @param destinationDirectory
+     */
     public void setPath(String destinationDirectory){
         this.destinationDirectory=destinationDirectory;
     }
 
+
+    /**
+     * dictionary getter
+     * @return the current dictionary
+     */
     public HashMap<String, TermInDictionairy> getDictionairy() {
         return dictionairy;
     }
 
+    /**
+     * The indexing function.
+     * For each indexed term, check if needs to be added to dictionary and updates the appropriate fields in dictionary entry.
+     * Creates a temporary posting file for all terms in current group of files.
+     * @param stemmedTerms the terms to be indexed. not necessarily stemmed - according to the stem checkbox.
+     */
     public void index(HashMap<String, HashMap<String,TermInDoc>> stemmedTerms){
 
         for (Map.Entry<String,HashMap<String,TermInDoc>>  entry : stemmedTerms.entrySet()) {
@@ -43,20 +63,14 @@ public class Indexer {
             if(!dictionairy.containsKey(entry.getKey())){
                 dictionairy.put(entry.getKey(),new TermInDictionairy(entry.getKey()));
                 dictionairy.get(entry.getKey()).setNumberOfDocumentsOccuresIn(entry.getValue().size());
-
             }
             //word is in dictionairy - update totalOccurencesInCorpus
             else{
                 dictionairy.get(entry.getKey()).setTotalOccurencesInCorpus();
                 dictionairy.get(entry.getKey()).setNumberOfDocumentsOccuresIn(entry.getValue().size());
             }
-
-            //add to cache
-            //    cache.addToCache(entry);
         }
-
-
-        //temp posting file
+        //create temp posting file
 
         //sort stemmedTerms map
         SortedSet<String> sortedKeys = new TreeSet<String>(stemmedTerms.keySet());
@@ -79,23 +93,33 @@ public class Indexer {
                 }
                 writer.println(line.toString());
                 writer.flush();
-
             }
             writer.close();
         }
         catch (Exception e){ e.printStackTrace();}
     }
 
+    /**
+     * merges 2 posting records of same terms into a single posting record
+     * @param first posting record of term X
+     * @param second posting record of term Y
+     * @return merged posting record of term X from the 2 records given
+     */
     private String mergeSameTerm(String first, String second){
         first+= second.substring(second.indexOf(": ")+2);
         return first;
     }
 
+    /**
+     * Once the dictionary is finalized, send it to the cache to determine which words should be included in cache
+     */
     public void sendDictionairyToCache(){
-        cache.addDictionairy(dictionairy);
+        cache.addDictionary(dictionairy);
     }
 
-    //iterates over the temporary posting files and merges them into final posting files using merge sort.
+    /**
+     * iterates over the temporary posting files and merges them into final posting files using merge sort.
+     */
     public void mergeTempPostings(){
         int start=1;
         int end=numberOfTempPostingFiles;
@@ -117,6 +141,13 @@ public class Indexer {
         }
     }
 
+    /**
+     * Merges posting files of a level from the merge sort into the next level of the merge sort. (e.g. level with 4 files to a level with 2 files)
+     * @param startIndex the file number of the first posting file in current level
+     * @param endIndex the file number of the last posting file in current level
+     * @param nextcounter the file number of the first new posting file to be created
+     * @return the file number of the last posting file in the next level
+     */
     //merges one level of the merge sort tree. start index is the lowest file number and end index is the highest file number to be merged in current iteration. nextCounter is the number of the new file to be created
     public int merge(int startIndex, int endIndex, int nextcounter) {
 
@@ -205,7 +236,11 @@ public class Indexer {
         return counter-1+ans;
     }
 
-    //last merge - merges 2 posting files into final posting files - 1 file per each letter, and 1 file for non-letters
+    /**
+     * When the merge sort has merged all files except the last 2, merges them into final posting files, 1 file per each letter, and 1 file for non-letters
+     * @param start file name of the first posting file to be merged
+     * @param end file name of the seconf posting file to be merged.
+     */
     public void mergeAlphabetic(int start, int end){
 
         try {
@@ -335,13 +370,18 @@ public class Indexer {
 
     }
 
-    //pointers from dictionairy to posting
-
+    /**
+     * updates the pointers from dictionary to posting
+     * @param term the term that its pointer needs to be updated
+     * @param lineNumber the line number of the terms entry in the posting file - that will be the pointer.
+     */
     private void updatePointerToPosting(String term, int lineNumber){
         dictionairy.get(term).setPointerToPosting(lineNumber);
     }
 
-    //add pointers from dictionairy to cache
+    /**
+     * updated pointers from dictionary to cache, where a pointer is a cache entry value (a partial posting line)
+     */
     public void pointerDictoCache(){
         for(String termInCache : cache.getCache().keySet()) {
             dictionairy.get(termInCache).setPointerToTermInCache(cache.getCache().get(termInCache));

@@ -8,24 +8,25 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
+
 public class Parser {
-    HashMap<String, String > months;
-    HashMap<String,String> whitespaces;
-    HashMap<String,String> stopwords;
-    Stemmer stemmer;
-    String destinationDirectory;
-    HashMap<String, String> beforeAfterStem;
-    String directory; //with/without stem directory
-    HashMap<String, HashMap<String,TermInDoc>> stemmedTerms;
-    int numberOfTermsInDoc;
-    String docName; //current document
+    HashMap<String, String > months; //map from month in partial form to the month number
+    HashMap<String,String> whitespaces; //chars to be taken off terms at certain point in parse
+    HashMap<String,String> stopwords; //words not to be indexed
+    Stemmer stemmer; //stems words
+    String destinationDirectory; //directory to save the with/without stem directories
+    HashMap<String, String> beforeAfterStem; //map of terms before and after stemming
+    String directory; //with/without stem directory that will include the documents properties and posting files
+    HashMap<String, HashMap<String,TermInDoc>> stemmedTerms; //parsed terms (may be stemmed by selection) to be indexed
+    int numberOfTermsInDoc; //counts the number of terms (after stem if selected with stemming) in current parsed document
+    String docName; //current document ID
     TermInDoc maxTF; //max tf in current document
     String mostFrequentTerm; //most frequent term in current document
     HashMap<String,String> documentProperties; //pointer for each doc to the line number of the doc properties saved in disk.
     int docNumber; //counter for documents
-    boolean withStemming;
+    boolean withStemming; //is selected to stem
     PrintWriter writer;
-    // Pattern regex;
+
 
     public Parser() {
         stemmedTerms=new HashMap<>();
@@ -42,9 +43,13 @@ public class Parser {
         months.put("January", "01");months.put("February","02");months.put("March","03");months.put("April","04");months.put("June","06");months.put("July","07");months.put("August","08");months.put("September","09");months.put("October","10");months.put("November","11");months.put("December","12");
         months.put("JAN", "01");months.put("FEB","02");months.put("MAR","03");months.put("APR","04");months.put("MAY","05");months.put("JUN","06");months.put("JUL","07");months.put("AUG","08");months.put("SEP","09");months.put("OCT","10");months.put("NOV","11");months.put("DEC","12");
         months.put("JANUARY", "01");months.put("FEBRUARY","02");months.put("MARCH","03");months.put("APRIL","04");months.put("JUNE","06");months.put("JULY","07");months.put("AUGUST","08");months.put("SEPTEMBER","09");months.put("OCTOBER","10");months.put("NOVEMBER","11");months.put("DECEMBER","12");
-        //   regex=Pattern.compile("\\-+|\\s+|\\\n+|\\(+|\\)+|\\;+|\\:+|\\?+|\\!+|\\<+|\\>+|\\}+|\\{+|\\]+|\\[+|\\*+|\\++|\\|+|\\\"+|\\=+|\\#+|\\`+|\\\\+");
+
     }
 
+    /**
+     * creates a document properties file and a writer to write to that file.
+     * writer is closed from control after parse for all docs has been completed.
+     */
     public void setWriter(){
         try {
             File dir = new File(destinationDirectory + "/" + directory);
@@ -53,15 +58,24 @@ public class Parser {
         }catch(Exception e){}
     }
 
+    /**
+     * terms getter
+     * @return  all terms after parse (and stem if selected) in current group of documents
+     */
     public HashMap<String, HashMap<String,TermInDoc>> getStemmedTerms() {
         return stemmedTerms;
     }
 
+
+    /**
+     * parse all documents in current file group
+     * @param rfDocs list of documents in current file group
+     * @param stopwords words not to be parsed
+     */
     public void parse(ArrayList<String> rfDocs, HashMap<String, String> stopwords){
         stemmedTerms.clear();
         this.stopwords=stopwords;
         try {
-            //PrintWriter writer = new PrintWriter(destinationDirectory + "/" + directory + "/" + "documents.txt", "UTF-8");
             //iterate over all docs, for each word in doc - parse and stem (if checked)
             for(int i=0; i<rfDocs.size(); i++){
                 docNumber++;
@@ -69,10 +83,8 @@ public class Parser {
                 mostFrequentTerm="";
                 maxTF = new TermInDoc("null", 0, false);
                 docName=extractName(rfDocs.get(i));
-                //parsedDocs.put(docName, new ArrayList<String>());
-                //parsedDocs.get(docName).add(docName);
                 documentProperties.put(docName,docNumber+"");
-                split(extractText(rfDocs.get(i)),docName);
+                split(extractText(rfDocs.get(i)));
 
                 //write document properties
                 writer.println(docName+": "+numberOfTermsInDoc+", "+mostFrequentTerm+", "+maxTF.getTf()); //for each document save properties on disk
@@ -82,6 +94,11 @@ public class Parser {
         }catch(Exception e){e.printStackTrace();};
     }
 
+    /**
+     * extract the text field from document
+     * @param s current document
+     * @return only the text between the TEXT tags
+     */
     public String extractText(String s){
         if(s.length()>6) {
             int start = s.indexOf("<TEXT>");
@@ -93,12 +110,21 @@ public class Parser {
         return s;
     }
 
+    /**
+     * extracts the document name from the document being parsed
+     * @param s current document
+     * @return document name betweem DOCNO tags
+     */
     public String extractName(String s){
         s = s.substring(s.indexOf("<DOCNO>")+7, s.indexOf("</DOCNO>")).trim();
         return s;
     }
 
-    public void split(String text, String i) {
+    /**
+     * parses the text of current document and sends to stemmer if necessary
+     * @param text the text between TEXT tags in current document
+     */
+    public void split(String text) {
 
         String[] splited = text.split("\\-+|\\s+|\\\n+|\\(+|\\)+|\\;+|\\:+|\\?+|\\!+|\\<+|\\>+|\\}+|\\{+|\\]+|\\[+|\\*+|\\++|\\|+|\\\"+|\\=+|\\#+|\\`+|\\\\+");
         // String[] splited = regex.split(text);
@@ -318,21 +344,20 @@ public class Parser {
 
                     //***********END DATES CHECK*****************
 
+                  /*  //is a price in dollars - save as number+dollars
+                    else if(splitedStringj.charAt(0)=='$'){
+                        String tmpSub=splitedStringj.substring(1);
+                        if(isDecimal(tmpSub)){
+
+                            stemWord(tmpSub+" dollar");
+                        }
+                    }*/
                     //***********NUMBERS***************
                     else if (isDecimal(splitedStringj)) {
 
                         //is decimal number
                         if (splitedStringj.contains(".")) {
-                        /*    try {
-                                BigDecimal bd = new BigDecimal(splitedStringj);
-                                bd = bd.setScale(2, RoundingMode.HALF_UP);
-                                splited[j] = bd.toString();
-                                splitedStringj = splited[j];
-                                splitedj = splitedStringj.length();
-                            } catch (NumberFormatException e) {
-                                e.printStackTrace();
-                                System.out.println("PROBLEM: " + splitedStringj); //////////delete
-                            }*/
+
                             splited[j] = round(splitedStringj);
                             splitedStringj = splited[j];
                             splitedj = splitedStringj.length();
@@ -355,6 +380,12 @@ public class Parser {
                             stemWord(splitedStringj + " percent");
                             j++;
                         }
+
+                        if (splitedlen > j + 1 && (splited[j + 1].equals("dollars"))) {
+                            stemWord("$"+splitedStringj);
+                            j++;
+                        }
+
                         //number without percent
                         else{
                             stemWord(splitedStringj);
@@ -367,16 +398,7 @@ public class Parser {
                         splitedj--;
                         //is decimal
                         if (splitedStringj.contains(".") && isNumeric(splitedStringj)) {
-                          /*  try {
-                                BigDecimal bd = new BigDecimal(splitedStringj);
-                                bd = bd.setScale(2, RoundingMode.HALF_UP);
-                                splited[j] = bd.toString();
-                                splitedStringj = splited[j];
-                                splitedj = splitedStringj.length();
-                            } catch (NumberFormatException e) {
-                                e.printStackTrace();
-                                System.out.println("PROBLEM: " + splitedStringj); //delete!
-                            }*/
+
                             splited[j]=round(splitedStringj);
                             splitedStringj = splited[j];
                             splitedj = splitedStringj.length();
@@ -397,22 +419,18 @@ public class Parser {
                     else if (splitedStringj.contains(",")) {
                         String tempNoCommas = splitedStringj;
                         tempNoCommas = tempNoCommas.replaceAll(",", "");
-                        if (isNumeric(tempNoCommas)) {
+                        if (isDecimal(tempNoCommas)) {
                             //decimal
-                            if (tempNoCommas.contains(".") && isDecimal(tempNoCommas)) {
-                                /*try {
-                                    BigDecimal bd = new BigDecimal(tempNoCommas);
-                                    bd = bd.setScale(2, RoundingMode.HALF_UP);
-                                    tempNoCommas = bd.toString();
-                                } catch (Exception e) {
-                                    System.out.println(tempNoCommas);
-                                    e.printStackTrace();
-                                }*/
+                            if (tempNoCommas.contains(".")) {
+
                                 tempNoCommas=round(tempNoCommas);
                             }
                             stemWord(tempNoCommas);
                         }
-                    } else { //regular word - save it
+
+                    }
+
+                    else { //regular word - save it
 
                         if (!stopwords.containsKey(splitedStringj)) {
                             stemWord(splitedStringj.toLowerCase());
@@ -425,12 +443,11 @@ public class Parser {
     }
 
 
-
-
-
-
-
-
+    /**
+     * checks if can parse to int
+     * @param str string to parse
+     * @return boolean if can parse to int or not
+     */
     public boolean isNumeric(String str)
     {
         try
@@ -444,6 +461,11 @@ public class Parser {
         return true;
     }
 
+    /**
+     * removes chars from the start of the given string that are in the whitespaces map property
+     * @param s string to be cleaned
+     * @return cleaned string
+     */
     private String cleanFromStart(String s){
         if(s.length()>0) {
             //clean from start
@@ -459,6 +481,11 @@ public class Parser {
         return s;
     }
 
+    /**
+     * removes chars from the end of the given string that are in the whitespaces map property, or 's
+     * @param s string to be cleaned
+     * @return cleaned string
+     */
     private String cleanFromEnd(String s) {
         if(s.length()>0) {
             char current = s.charAt(0);
@@ -483,6 +510,11 @@ public class Parser {
         return s;
     }
 
+    /**
+     * rounds string that is a decimal number to 2 digits after the decimal point
+     * @param s string representing a decimal number
+     * @return string representing a rounded decimal number to 2 digits after the decimal point.
+     */
     private String round(String s){
         int dot = s.indexOf('.');
         String first = s.substring(0,dot);
@@ -490,17 +522,25 @@ public class Parser {
         int finScnd=0;
         if(sec.length()>2){
 
-            if(sec.charAt(2)>5){
+            if((sec.charAt(2)+"").compareTo("5")>0){
                 finScnd = (Integer.parseInt(sec.charAt(1)+"")+1);
             }
             else{
                 finScnd=(Integer.parseInt(sec.charAt(1)+""));
+            }
+            if(first.equals("")){
+                first="0";
             }
             return first+"."+sec.charAt(0)+finScnd+"";
         }
         return s;
     }
 
+    /**
+     * checks if given string can be parsed to a double
+     * @param str string to be parsed
+     * @return can/cannot be parsed to double
+     */
     private boolean isDecimal(String str){
         try
         {
@@ -513,18 +553,35 @@ public class Parser {
         return true;
     }
 
-    //destination directory for all files to be saved in
+    /**
+     * destination directory setter
+     * @param destinationDirectory destination directory for all files to be saved in
+     */
     public void setDestinationDirectory(String destinationDirectory){
         this.destinationDirectory=destinationDirectory;
     }
-    //directory for with stemming files or without stemming files
+
+    /**
+     * directory setter
+     * @param directory directory for with stemming files or without stemming files
+     */
     public void setDirectory(String directory){
         this.directory=directory;
     }
 
+    /**
+     * with/without stemming setter
+     * @param withStemming whether the stem checkbox is selected
+     */
     public void setWithStemming(boolean withStemming){
         this.withStemming=withStemming;
     }
+
+    /**
+     * stems a word if selected to.
+     * updates document properties - compares to maxtf in doc and most frequent term in doc, and determines if the term is in the first 100 terms in doc
+     * @param word term to be stemmed
+     */
     public void stemWord(String word){
 
         numberOfTermsInDoc++; //number of terms in current document BEFORE stem
