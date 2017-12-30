@@ -90,6 +90,7 @@ public class Control {
      * after all the groups of files have been parsed and indexed, activates the indexer to merge all the temporary posting files
      */
     public void merge(){
+        indexer.setDocLengths(parser.getDocLenghts());
         parser.writer.close();
         indexer.mergeTempPostings();
     }

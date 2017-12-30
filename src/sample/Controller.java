@@ -217,9 +217,13 @@ public class Controller {
             if(stembox.isSelected()){
                 cachepath = "/cacheStemmed.ser";
                 dict = "/dictionairyStemmed.ser";
+                rf.ctrl.withStemming=true;
+                rf.ctrl.parser.setWithStemming(true);
             }else{
                 cachepath = "/cacheNotStemmed.ser";
                 dict = "/dictionairyNotStemmed.ser";
+                rf.ctrl.withStemming=false;
+                rf.ctrl.parser.setWithStemming(false);
             }
             ObjectInputStream inCache = new ObjectInputStream(new FileInputStream((loadPath+cachepath)));
             Cache cache = (Cache) inCache.readObject();
@@ -280,7 +284,11 @@ public class Controller {
                     saveCacheToSer();
                     saveDictToSer();
 
-                    saveDictForZipf();
+                    Searcher searcher = new Searcher();
+                    searcher.parser=rf.ctrl.parser;
+                    searcher.indexer=rf.ctrl.indexer;
+                    searcher.parser.setIsQuery(true);
+                    searcher.getRelevantDocs("Newspapers in the Former Yugoslav Republic of Macedonia");
                     //saveDictTxt();
 
                     //enable buttons

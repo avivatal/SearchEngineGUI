@@ -72,7 +72,7 @@ public class ReadFile
         while(counter<4){
             documents.clear();
             //reads in groups of 70 files to parse+index each group separately
-            for(int i=0; i<2 && counter<corpusSize; i++){
+            for(int i=0; i<1 && counter<corpusSize; i++){
                 try {
                     String path = listOfFiles[counter].getPath() + "/" + listOfFiles[counter].getName();
                     BufferedReader br = new BufferedReader(new FileReader(path));

@@ -6,6 +6,7 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.regex.Pattern;
 
 
@@ -26,9 +27,13 @@ public class Parser {
     int docNumber; //counter for documents
     boolean withStemming; //is selected to stem
     PrintWriter writer;
+    HashMap<String, Integer> docLenghts;
+    boolean isQuery;
+    HashSet<String> termsForQuery;
 
 
     public Parser() {
+        isQuery=false;
         stemmedTerms=new HashMap<>();
         stemmer=new Stemmer();
         beforeAfterStem=new HashMap<>();
@@ -43,7 +48,14 @@ public class Parser {
         months.put("January", "01");months.put("February","02");months.put("March","03");months.put("April","04");months.put("June","06");months.put("July","07");months.put("August","08");months.put("September","09");months.put("October","10");months.put("November","11");months.put("December","12");
         months.put("JAN", "01");months.put("FEB","02");months.put("MAR","03");months.put("APR","04");months.put("MAY","05");months.put("JUN","06");months.put("JUL","07");months.put("AUG","08");months.put("SEP","09");months.put("OCT","10");months.put("NOV","11");months.put("DEC","12");
         months.put("JANUARY", "01");months.put("FEBRUARY","02");months.put("MARCH","03");months.put("APRIL","04");months.put("JUNE","06");months.put("JULY","07");months.put("AUGUST","08");months.put("SEPTEMBER","09");months.put("OCTOBER","10");months.put("NOVEMBER","11");months.put("DECEMBER","12");
+        docLenghts = new HashMap<>();
+    }
 
+    public void setIsQuery(boolean b){
+        isQuery=b;
+        if(b){
+            termsForQuery=new HashSet<>();
+        }
     }
 
     /**
@@ -57,6 +69,11 @@ public class Parser {
             writer = new PrintWriter(destinationDirectory + "/" + directory + "/" + "documents.txt", "UTF-8");
         }catch(Exception e){}
     }
+
+    public HashMap<String, Integer> getDocLenghts() {
+        return docLenghts;
+    }
+
 
     /**
      * terms getter
@@ -86,6 +103,7 @@ public class Parser {
                 documentProperties.put(docName,docNumber+"");
                 split(extractText(rfDocs.get(i)));
 
+                docLenghts.put(docName,numberOfTermsInDoc);
                 //write document properties
                 writer.println(docName+": "+numberOfTermsInDoc+", "+mostFrequentTerm+", "+maxTF.getTf()); //for each document save properties on disk
                 writer.flush();
@@ -600,42 +618,49 @@ public class Parser {
             term=word;
         }
 
-        //if term is new in hashmap
-        if (!stemmedTerms.containsKey(term)) {
-            TermInDoc tid = new TermInDoc(docName, 1, false);
-            if (numberOfTermsInDoc < 100) {
-                tid.setInFirst100Terms(true);
-            }
-            HashMap<String, TermInDoc> map = new HashMap<>();
-            map.put(docName, tid);
-            stemmedTerms.put(term, map);
-            if (tid.getTf() > maxTF.getTf()) {
-                maxTF = tid;
-                mostFrequentTerm=term;
-            }
-        }
-        //term appears in hashmap
-        else {
-            //if doc appears in stemmed term - update TF
-            if (stemmedTerms.get(term).containsKey((docName))) {
-                (stemmedTerms.get(term)).get(docName).setTf();
-            }
-            //if doc doesnt appear in stemmed term, create new TermInDoc entry
-            else {
-                stemmedTerms.get(term).put(docName, new TermInDoc(docName, 1, false));
+        if(!isQuery) {
+            //if term is new in hashmap
+            if (!stemmedTerms.containsKey(term)) {
+                TermInDoc tid = new TermInDoc(docName, 1, false);
                 if (numberOfTermsInDoc < 100) {
-                    stemmedTerms.get(term).get(docName).setInFirst100Terms(true);
+                    tid.setInFirst100Terms(true);
+                }
+                HashMap<String, TermInDoc> map = new HashMap<>();
+                map.put(docName, tid);
+                stemmedTerms.put(term, map);
+                if (tid.getTf() > maxTF.getTf()) {
+                    maxTF = tid;
+                    mostFrequentTerm = term;
                 }
             }
-            if (stemmedTerms.get(term).get(docName).getTf() > maxTF.getTf()) {
-                maxTF = stemmedTerms.get(term).get(docName);
-                mostFrequentTerm=term;
+            //term appears in hashmap
+            else {
+                //if doc appears in stemmed term - update TF
+                if (stemmedTerms.get(term).containsKey((docName))) {
+                    (stemmedTerms.get(term)).get(docName).setTf();
+                }
+                //if doc doesnt appear in stemmed term, create new TermInDoc entry
+                else {
+                    stemmedTerms.get(term).put(docName, new TermInDoc(docName, 1, false));
+                    if (numberOfTermsInDoc < 100) {
+                        stemmedTerms.get(term).get(docName).setInFirst100Terms(true);
+                    }
+                }
+                if (stemmedTerms.get(term).get(docName).getTf() > maxTF.getTf()) {
+                    maxTF = stemmedTerms.get(term).get(docName);
+                    mostFrequentTerm = term;
+                }
             }
         }
-
+        //is a query
+        else{
+            termsForQuery.add(term);
+        }
     }
 
-
+    public HashSet<String> getTermsForQuery() {
+        return termsForQuery;
+    }
 }
 
 
