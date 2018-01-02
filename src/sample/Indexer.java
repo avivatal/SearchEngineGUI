@@ -17,8 +17,10 @@ public class Indexer {
     String destinationDirectory; //directory of the stem/noStem directory
     String directory;   //stem/noStem directory
 
+
     HashMap<String, Double> docWeights;
-    HashMap<String, Integer> docLengths;
+
+   HashMap<String, Integer> docLengths;
     int numOfDocsInCorpus;
 
     public Indexer() {
@@ -28,11 +30,17 @@ public class Indexer {
 
     }
 
+    public void setDocWeights(HashMap<String, Double> docWeights) {
+        this.docWeights = docWeights;
+    }
+
     public void setDocLengths(HashMap<String, Integer> docLengths) {
         this.docLengths = docLengths;
         numOfDocsInCorpus=docLengths.size();
     }
-
+    public HashMap<String, Integer> getDocLengths() {
+        return docLengths;
+    }
     public HashMap<String, Double> getDocWeights() {
         return docWeights;
     }

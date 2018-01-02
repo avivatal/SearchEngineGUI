@@ -51,9 +51,12 @@ public class Searcher {
                 int startName = s.indexOf(("Number: "));
                 int start = s.indexOf("<title>");
                 int end = s.indexOf("<desc>");
-                if (start != -1 && end != -1 && startName!=-1) {
-                    s = s.substring(start + 7, end);
-                    String number = s.substring(startName,start);
+                int startDis=s.indexOf("Description:");
+                int endDis=s.indexOf("<narr>");
+                String temp=s;
+                if (start != -1 && end != -1 && startName!=-1 &&endDis!=-1 && startDis!=-1) {
+                    s = s.substring(start + 7, end)+" "+temp.substring(startDis+12,endDis);
+                    String number = temp.substring(startName,start);
                     queryList.put(number,s);
                 }
             }
@@ -75,90 +78,92 @@ public class Searcher {
 
         double currentQueryWeight;
         List<String> list=null;
+        HashMap<String, Double> weightsInDocs = new HashMap<>(); //<docID, totalQueryTermsWeight>
 
         for(String term : parsedQuery){
 
-            TermInDictionairy tid = indexer.getDictionairy().get(term);
-            double idf = Math.log10(indexer.numOfDocsInCorpus/tid.getNumberOfDocumentsOccuresIn())/Math.log10(2);
-            HashMap<String, Double> weightsInDocs = new HashMap<>(); //<docID, totalQueryTermsWeight>
+            if(indexer.getDictionairy().containsKey(term)){
+                TermInDictionairy tid = indexer.getDictionairy().get(term);
+                double idf = Math.log10(indexer.numOfDocsInCorpus/tid.getNumberOfDocumentsOccuresIn())/Math.log10(2);
 
-            String path= indexer.destinationDirectory+"/"+indexer.directory+"/";
-            char firstLetter = term.substring(0,1).toCharArray()[0];
-            if(firstLetter<97|| firstLetter>122){
-                path+= "nonLetters.txt";
-            }
-            else{
-                path+=firstLetter+".txt";
-            }
-
-            try {
-                BufferedReader posting = new BufferedReader(new FileReader(path));
-                int lineNumber = tid.getPointerToPosting();
-                String postingLine="";
-
-                for(int i=0; i<lineNumber; i++){
-                    postingLine = posting.readLine();
+                String path= indexer.destinationDirectory+"/"+indexer.directory+"/";
+                char firstLetter = term.substring(0,1).toCharArray()[0];
+                if(firstLetter<97|| firstLetter>122){
+                    path+= "nonLetters.txt";
+                }
+                else{
+                    path+=firstLetter+".txt";
                 }
 
+                try {
+                    BufferedReader posting = new BufferedReader(new FileReader(path));
+                    int lineNumber = tid.getPointerToPosting();
+                    String postingLine = "";
 
-                //get tfs from posting line
-                postingLine=postingLine.substring(postingLine.indexOf(':')+1);
-                char[] charsInLine = postingLine.toCharArray();
-                for (int i = 0; i < charsInLine.length; i++) {
-                    if (charsInLine[i] == '(') {
-                        i++;
-                        //docID
-                        StringBuilder docID = new StringBuilder();
-                        while (charsInLine[i] != ' ') {
-                            docID.append(charsInLine[i]);
-                            i++;
-                        }
-                        StringBuilder tf = new StringBuilder();
-                        i++;
-                        //tf
-                        while (charsInLine[i] != ' ') {
-                            tf.append(charsInLine[i]);
-                            i++;
-                        }
-                        while (charsInLine[i] != ')') {
-                            i++;
-                        }
-                        i++;
-
-                        int docLength = indexer.docLengths.get(docID.toString());
-
-                        //calculate weight
-                        double tfnormal = Double.parseDouble(tf.toString()) / docLength;
-
-                        if (weightsInDocs.containsKey(docID.toString())) {
-                            double currentWeight = weightsInDocs.get(docID.toString());
-                            currentWeight += tfnormal * idf;
-                            weightsInDocs.put(docID.toString(), currentWeight);
-                        } else {
-                            weightsInDocs.put(docID.toString(), tfnormal * idf);
-                        }
+                    for (int i = 0; i < lineNumber; i++) {
+                        postingLine = posting.readLine();
                     }
-                }
-
-                //calculate CosSim for each document that has one of the query terms.
-                for(String s : weightsInDocs.keySet()){
-
-                    double docConst = indexer.docWeights.get(s);
-                    docConst=docConst*parsedQuery.size();
-                    docConst=Math.sqrt(docConst);
-                    weightsInDocs.put(s,weightsInDocs.get(s)/docConst);
-                }
-
-                //get 50 most relevant docs
-                Map sortedMap=sortByValue(weightsInDocs);
-                list = new ArrayList<>(sortedMap.keySet());
-                list.subList(0,50);
 
 
+                    //get tfs from posting line
+                    postingLine = postingLine.substring(postingLine.indexOf(':') + 1);
+                    char[] charsInLine = postingLine.toCharArray();
+                    for (int i = 0; i < charsInLine.length; i++) {
+                        if (charsInLine[i] == '(') {
+                            i++;
+                            //docID
+                            StringBuilder docID = new StringBuilder();
+                            while (charsInLine[i] != ' ') {
+                                docID.append(charsInLine[i]);
+                                i++;
+                            }
+                            StringBuilder tf = new StringBuilder();
+                            i++;
+                            //tf
+                            while (charsInLine[i] != ' ') {
+                                tf.append(charsInLine[i]);
+                                i++;
+                            }
+                            while (charsInLine[i] != ')') {
+                                i++;
+                            }
+                            i++;
+
+                            int docLength = indexer.docLengths.get(docID.toString());
+
+                            //calculate weight
+                            double tfnormal = Double.parseDouble(tf.toString()) / docLength;
+
+                            if (weightsInDocs.containsKey(docID.toString())) {
+                                double currentWeight = weightsInDocs.get(docID.toString());
+                                currentWeight += tfnormal * idf;
+                                weightsInDocs.put(docID.toString(), currentWeight);
+                            } else {
+                                weightsInDocs.put(docID.toString(), tfnormal * idf);
+                            }
+                        }
+                    }} catch (Exception e){}
             }
-            catch (Exception e){}
-        }return list;
+        }
+
+        //calculate CosSim for each document that has one of the query terms.
+        for(String s : weightsInDocs.keySet()){
+
+            double docConst = indexer.docWeights.get(s);
+            docConst=docConst*parsedQuery.size();
+            docConst=Math.sqrt(docConst);
+            weightsInDocs.put(s,weightsInDocs.get(s)/docConst);
+        }
+
+        //get 50 most relevant docs
+        Map sortedMap=sortByValue(weightsInDocs);
+        list = new ArrayList<>(sortedMap.keySet());
+        list=list.subList(0,50);
+        return list;
     }
+
+
+
 
     private Map<String, Double> sortByValue(Map<String, Double> map) {
         List<Map.Entry<String, Double>> list = new LinkedList<>(map.entrySet());

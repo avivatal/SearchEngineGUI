@@ -32,6 +32,9 @@ public class Control {
         return directory;
     }
 
+    public HashMap<String, String> getStopwords() {
+        return stopwords;
+    }
 
     /**
      * notifies the parser and the indexer whether to stem terms.

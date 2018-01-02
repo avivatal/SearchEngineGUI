@@ -13,6 +13,9 @@ import java.util.regex.Pattern;
 public class Parser {
     HashMap<String, String > months; //map from month in partial form to the month number
     HashMap<String,String> whitespaces; //chars to be taken off terms at certain point in parse
+
+
+
     HashMap<String,String> stopwords; //words not to be indexed
     Stemmer stemmer; //stems words
     String destinationDirectory; //directory to save the with/without stem directories
@@ -30,6 +33,8 @@ public class Parser {
     HashMap<String, Integer> docLenghts;
     boolean isQuery;
     HashSet<String> termsForQuery;
+    boolean docSummary;
+    HashMap<String, Integer> termsTF;
 
 
     public Parser() {
@@ -49,6 +54,7 @@ public class Parser {
         months.put("JAN", "01");months.put("FEB","02");months.put("MAR","03");months.put("APR","04");months.put("MAY","05");months.put("JUN","06");months.put("JUL","07");months.put("AUG","08");months.put("SEP","09");months.put("OCT","10");months.put("NOV","11");months.put("DEC","12");
         months.put("JANUARY", "01");months.put("FEBRUARY","02");months.put("MARCH","03");months.put("APRIL","04");months.put("JUNE","06");months.put("JULY","07");months.put("AUGUST","08");months.put("SEPTEMBER","09");months.put("OCTOBER","10");months.put("NOVEMBER","11");months.put("DECEMBER","12");
         docLenghts = new HashMap<>();
+        termsTF = new HashMap<>();
     }
 
     public void setIsQuery(boolean b){
@@ -56,6 +62,13 @@ public class Parser {
         if(b){
             termsForQuery=new HashSet<>();
         }
+    }
+    public void setStopwords(HashMap<String, String> stopwords) {
+        this.stopwords = stopwords;
+    }
+
+    public void setDocSummary(boolean docSummary) {
+        this.docSummary = docSummary;
     }
 
     /**
@@ -655,11 +668,40 @@ public class Parser {
         //is a query
         else{
             termsForQuery.add(term);
+            if(docSummary){
+                if(termsTF.containsKey(term)){
+                    int currentTF = termsTF.get(term);
+                    termsTF.put(term, ++currentTF);
+                }
+                termsTF.put(term,1);
+
+            }
         }
+    }
+
+    public HashMap<String,HashSet<String>> summarize(String document){
+
+        HashMap<String,HashSet<String>> sentenceTerms = new HashMap<>(); //<sentence, set of parsed terms>
+        termsTF.clear();
+        termsForQuery.clear();
+
+        String[] sentences = document.split(".");
+        for(String s : sentences){
+            split(s);
+            sentenceTerms.put(s,new HashSet<>(termsForQuery));
+            termsForQuery.clear();
+        }
+
+        docSummary=false;
+        return sentenceTerms;
     }
 
     public HashSet<String> getTermsForQuery() {
         return termsForQuery;
+    }
+
+    public HashMap<String, Integer> getTermsTF() {
+        return termsTF;
     }
 }
 

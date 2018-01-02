@@ -9,14 +9,17 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
+import java.awt.geom.Path2D;
 import java.io.*;
 
 import java.util.*;
 
 import javafx.scene.control.Alert;
 
+import javax.swing.*;
 import javax.xml.crypto.dsig.keyinfo.KeyValue;
 //import jdk.nashorn.internal.ir.debug.ObjectSizeCalculator;
 
@@ -66,6 +69,14 @@ public class Controller {
         searcher=new Searcher();
         searcher.setParser(rf.ctrl.parser);
         searcher.setIndexer(rf.ctrl.indexer);
+        docName="Los Angeles just may be the City of Angeles. The parents of the high school"+
+ "students are apt to believe it when they learn what the operations people of"+
+     "   Northwest Airlines at Los Angeles International Airport did last month. "+
+"</P><P> When Northwest's Flight 190 was being buttoned down for its 12:30 p.m.  departure, nearly half of a group of 40 Japanese high school students were still mired in U.S. Customs following their long flight from Japan. </P> <P>"+
+                "Northwest put compassion over schedule and waited more than an hour until the final one of the group, none of whom could speak English, was on board. They"+
+       " were, in fact, bound for the Puget Sound area for a three-week intensive"+
+       " English language course preparatory to going on to Phoenix and a yearlong"+
+       " exchange program. "+ "</P> <P> But one of the flight attendants said,";
     }
 
     /**
@@ -143,9 +154,9 @@ public class Controller {
     public void browseQueries(){
 
         try {
-            DirectoryChooser chooser = new DirectoryChooser();
+            FileChooser chooser = new FileChooser();
             chooser.setTitle("Browse");
-            File selectedDirectory = chooser.showDialog(stage);
+            File selectedDirectory = chooser.showOpenDialog(stage);//showDialog(stage);
             queryPath = (selectedDirectory.toString());
             browsequery.setText(selectedDirectory.toString());
         }catch (Exception e){}
@@ -157,12 +168,31 @@ public class Controller {
      */
     public void getQuery(){
 
+        rf.ctrl.setWithStemming(stembox.isSelected());
+        rf.ctrl.setPaths("C:/Users/avevanes/Downloads/corpus/stop_words.txt","C:/Users/avevanes/Downloads");
+        searcher.parser.setStopwords(rf.ctrl.getStopwords());
+        searcher.parser.setIsQuery(true);
+        destinationDirectory="C:/Users/avevanes/Downloads";
+        try {
+            ObjectInputStream docWeight = new ObjectInputStream(new FileInputStream(destinationDirectory+"/"+rf.ctrl.directory+"/docWeightsWithStem.ser"));
+            rf.ctrl.indexer.setDocWeights((HashMap<String,Double>)docWeight.readObject());
+            docWeight.close();
+
+            ObjectInputStream docLength = new ObjectInputStream(new FileInputStream(destinationDirectory+"/"+rf.ctrl.directory+"/docLengthWithStem.ser"));
+            rf.ctrl.indexer.setDocLengths((HashMap<String,Integer>)docLength.readObject());
+            docWeight.close();
+        }
+        catch (Exception e){}
+
+
         List<String> list=null;
         long startTime=System.currentTimeMillis();
         if(singlequery.getText() != ""){
             if(docidbox.isSelected())
             {
+                Summarizer summary=new Summarizer();
                 docName=singlequery.getText().trim();
+                summary.docSummary(docName);
                 ///new punction
             }
             else {
@@ -171,22 +201,69 @@ public class Controller {
                 list=searcher.getRelevantDocs(query);
             }
         }
-        long totalTime=System.currentTimeMillis()-startTime;
+        long totalTime=System.currentTimeMillis()-startTime;/*
         StringBuilder results = new StringBuilder();
         for(String s:list){
             results.append(s+"\n");
         }
+
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setContentText("The query has been successfuly executed.\n" +
                 "The number of documents that have been retrieved is: "+list.size()+
         "\nThe total runtime is: "+totalTime+"" +
                 "\nThe document IDs retrieved are: \n"+results.toString());
         alert.show();
+*/
+
+
+        ObservableList<String> items= FXCollections.observableArrayList();
+        items.add("The number of documents that have been retrieved is: "+list.size());
+        items.add("The total runtime is: "+totalTime);
+        items.add("The document IDs retrieved are: ");
+        for(String s:list){
+            items.add(s);
+        }
+
+        Stage newstage = new Stage();
+        newstage.setTitle("Results");
+        BorderPane pane = new BorderPane();
+        Scene scene = new Scene(pane);
+        newstage.setScene(scene);
+        ListView<String> listView = new ListView<>();
+        listView.setItems(items);
+        pane.setCenter(listView);
+        newstage.setAlwaysOnTop(true);
+        newstage.setOnCloseRequest(
+                e -> {
+                    e.consume();
+                    newstage.close();
+                });
+        newstage.showAndWait();
 
     }
 
     public void getQueryPath()
     {
+        ///////
+        rf.ctrl.setWithStemming(stembox.isSelected());
+        rf.ctrl.setPaths("C:/Users/avevanes/Downloads/corpus/stop_words.txt","C:/Users/avevanes/Downloads");
+        searcher.parser.setStopwords(rf.ctrl.getStopwords());
+        searcher.parser.setIsQuery(true);
+        destinationDirectory="C:/Users/avevanes/Downloads";
+        try {
+            ObjectInputStream docWeight = new ObjectInputStream(new FileInputStream(destinationDirectory+"/"+rf.ctrl.directory+"/docWeightsWithStem.ser"));
+            rf.ctrl.indexer.setDocWeights((HashMap<String,Double>)docWeight.readObject());
+            docWeight.close();
+
+            ObjectInputStream docLength = new ObjectInputStream(new FileInputStream(destinationDirectory+"/"+rf.ctrl.directory+"/docLengthWithStem.ser"));
+            rf.ctrl.indexer.setDocLengths((HashMap<String,Integer>)docLength.readObject());
+            docWeight.close();
+        }
+        catch (Exception e){}
+        /////
+
+
+
         long startTime=System.currentTimeMillis();
         if(queryPath!=""){
             queryPath=browsequery.getText();
@@ -195,7 +272,7 @@ public class Controller {
         StringBuilder result = new StringBuilder();
         HashMap<String, List<String>> results = searcher.multipleQueries(queryPath);
         int totalSize=0;
-        for(Map.Entry<String, List<String>>  entry : results.entrySet()){
+ /*       for(Map.Entry<String, List<String>>  entry : results.entrySet()){
             result.append("Query Number: "+entry.getKey()+"\nResults:\n");
             for(String s:entry.getValue()){
                 result.append(s+"\n");
@@ -209,8 +286,40 @@ public class Controller {
                 "The number of documents that have been retrieved is: "+totalSize+
                 "\nThe total runtime is: "+totalTime+"" +
                 "\nThe document IDs retrieved are: \n"+result.toString());
-        alert.show();
+        alert.show();*/
+////
 
+        long totalTime=System.currentTimeMillis()-startTime;
+
+        ObservableList<String> items= FXCollections.observableArrayList();
+        for(Map.Entry<String, List<String>>  entry : results.entrySet()){
+            items.add("The queries have been successfuly executed.");
+            items.add("The number of documents that have been retrieved is: "+totalSize);
+            items.add("The total runtime is: "+totalTime);
+            items.add("The document IDs retrieved are: "+result.toString());
+            items.add("Query Number: "+entry.getKey());
+            items.add("Results: ");
+            for(String s:entry.getValue()){
+                items.add(s);
+                totalSize++;
+            }
+        }
+
+        Stage newstage = new Stage();
+        newstage.setTitle("Results");
+        BorderPane pane = new BorderPane();
+        Scene scene = new Scene(pane);
+        newstage.setScene(scene);
+        ListView<String> listView = new ListView<>();
+        listView.setItems(items);
+        pane.setCenter(listView);
+        newstage.setAlwaysOnTop(true);
+        newstage.setOnCloseRequest(
+                e -> {
+                    e.consume();
+                    newstage.close();
+                });
+        newstage.showAndWait();
 
     }
     /**
@@ -377,12 +486,19 @@ public class Controller {
                     //save cache and dictionary to calculate their sizes
                     saveCacheToSer();
                     saveDictToSer();
+
                     try {
                         File dict = new File(destinationDirectory + "/" + rf.ctrl.getDirectory() + "/docWeightsWithStem.ser");
                         ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(dict));
                         out.writeObject(rf.ctrl.indexer.getDocWeights());
                         out.flush();
                         out.close();
+
+                        File docLength = new File(destinationDirectory + "/" + rf.ctrl.getDirectory() + "/docLengthWithStem.ser");
+                        ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(docLength));
+                        output.writeObject(rf.ctrl.indexer.getDocLengths());
+                        output.flush();
+                        output.close();
                     }catch (Exception e){}
 
                   /*  Searcher searcher = new Searcher();

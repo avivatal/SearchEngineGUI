@@ -183,7 +183,7 @@
       </VBox>
       <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="2" GridPane.rowIndex="3">
          <children>
-            <Button fx:id="browsequerybutton" mnemonicParsing="false" onAction="#browseCorpus" text="Browse">
+            <Button fx:id="browsequerybutton" mnemonicParsing="false" onAction="#browseQueries" text="Browse">
                <VBox.margin>
                   <Insets bottom="20.0" left="10.0" right="20.0" top="20.0" />
                </VBox.margin>
@@ -192,7 +192,7 @@
       </VBox>
       <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="3" GridPane.rowIndex="3">
          <children>
-            <Button fx:id="executequeries" mnemonicParsing="false" onAction="#browseCorpus" text="Execute Queries">
+            <Button fx:id="executequeries" mnemonicParsing="false" onAction="#getQueryPath" text="Execute Queries">
                <VBox.margin>
                   <Insets top="20.0" />
                </VBox.margin>
@@ -205,7 +205,7 @@
          </GridPane.margin>
       </Text>
       <TextField fx:id="singlequery" prefHeight="26.0" prefWidth="170.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-      <Button fx:id="executequery" mnemonicParsing="false" onAction="#browseCorpus" text="Execute Query" GridPane.columnIndex="3" GridPane.rowIndex="4" />
+      <Button fx:id="executequery" mnemonicParsing="false" onAction="#getQuery" text="Execute Query" GridPane.columnIndex="3" GridPane.rowIndex="4" />
       <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="2" GridPane.rowIndex="4">
          <children>
             <CheckBox fx:id="expandquery" mnemonicParsing="false" prefHeight="37.0" prefWidth="121.0" selected="true" text="Expand Query">
