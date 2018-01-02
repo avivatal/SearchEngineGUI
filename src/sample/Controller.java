@@ -35,6 +35,15 @@ public class Controller {
     public javafx.scene.control.Button save;
     public javafx.scene.control.TextField loadtxt;
     public javafx.scene.control.TextField savetxt;
+    public javafx.scene.control.TextField browsequery;
+    public javafx.scene.control.TextField singlequery;
+    public javafx.scene.control.Button browsequerybutton;
+    public javafx.scene.control.Button executequeries;
+    public javafx.scene.control.Button executequery;
+    public javafx.scene.control.Button resetall;
+    public javafx.scene.control.CheckBox expandquery;
+    public javafx.scene.control.CheckBox docidbox;
+
 
     String corpusPath;
     String destinationDirectory;
@@ -42,12 +51,19 @@ public class Controller {
     private ReadFile rf;
     String savePath;
     String loadPath;
+    String queryPath;
+    String query;
+    String docName;
+    private Searcher searcher;
 
     public Controller() {
         corpusPath=new String() ;
         destinationDirectory=new String() ;
         corpBrowse=new TextField();
         rf=new ReadFile();
+        searcher=new Searcher();
+        searcher.setParser(rf.ctrl.parser);
+        searcher.setIndexer(rf.ctrl.indexer);
     }
 
     /**
@@ -119,6 +135,50 @@ public class Controller {
 
     }
 
+    /**
+     * opens a directory chooser to select the directory which the queries file is in
+     */
+    public void browseQueries(){
+
+        try {
+            DirectoryChooser chooser = new DirectoryChooser();
+            chooser.setTitle("Browse");
+            File selectedDirectory = chooser.showDialog(stage);
+            queryPath = (selectedDirectory.toString());
+            browsequery.setText(selectedDirectory.toString());
+        }catch (Exception e){}
+
+    }
+
+    /**
+     * get query input from user
+     */
+    public void getQuery(){
+
+        long startTime=System.currentTimeMillis();
+        if(singlequery.getText() != ""){
+        if(docidbox.isSelected())
+        {
+            docName=singlequery.getText().trim();
+            ///new punction
+        }
+        else {
+
+            query = singlequery.getText().trim();
+            searcher.getRelevantDocs(query);
+        }
+        }
+        long totalTime=System.currentTimeMillis()-startTime;
+    }
+
+    public void getQueryPath()
+    {
+        if(queryPath!=""){
+            queryPath=browsequery.getText();
+        }
+
+        searcher.multipleQueries(queryPath);
+    }
     /**
      * opens a directory chooser to select the directory to save the posting files in
      */
@@ -283,12 +343,19 @@ public class Controller {
                     //save cache and dictionary to calculate their sizes
                     saveCacheToSer();
                     saveDictToSer();
+                    try {
+                        File dict = new File(destinationDirectory + "/" + rf.ctrl.getDirectory() + "/docWeightsWithStem.ser");
+                        ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(dict));
+                        out.writeObject(rf.ctrl.indexer.getDocWeights());
+                        out.flush();
+                        out.close();
+                    }catch (Exception e){}
 
-                    Searcher searcher = new Searcher();
+                  /*  Searcher searcher = new Searcher();
                     searcher.parser=rf.ctrl.parser;
                     searcher.indexer=rf.ctrl.indexer;
                     searcher.parser.setIsQuery(true);
-                    searcher.getRelevantDocs("Newspapers in the Former Yugoslav Republic of Macedonia");
+                    searcher.getRelevantDocs("Newspapers in the Former Yugoslav Republic of Macedonia");*/
                     //saveDictTxt();
 
                     //enable buttons

@@ -12,20 +12,20 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.text.Text?>
 
-<GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1">
   <columnConstraints>
       <ColumnConstraints hgrow="SOMETIMES" maxWidth="429.0" minWidth="10.0" prefWidth="245.0" />
     <ColumnConstraints hgrow="SOMETIMES" maxWidth="429.0" minWidth="10.0" prefWidth="199.0" />
-    <ColumnConstraints hgrow="SOMETIMES" maxWidth="451.0" minWidth="10.0" prefWidth="81.0" />
-      <ColumnConstraints hgrow="SOMETIMES" maxWidth="451.0" minWidth="10.0" prefWidth="75.0" />
+    <ColumnConstraints hgrow="SOMETIMES" maxWidth="451.0" minWidth="10.0" prefWidth="140.0" />
+      <ColumnConstraints hgrow="SOMETIMES" maxWidth="451.0" minWidth="10.0" prefWidth="116.0" />
   </columnConstraints>
   <rowConstraints>
       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-    <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="111.0" minHeight="10.0" prefHeight="111.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="81.0" minHeight="10.0" prefHeight="61.0" vgrow="SOMETIMES" />
+    <RowConstraints maxHeight="125.0" minHeight="10.0" prefHeight="64.0" vgrow="SOMETIMES" />
+    <RowConstraints maxHeight="173.0" minHeight="10.0" prefHeight="113.0" vgrow="SOMETIMES" />
+    <RowConstraints maxHeight="158.0" minHeight="10.0" prefHeight="158.0" vgrow="SOMETIMES" />
   </rowConstraints>
    <children>
       <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
@@ -68,23 +68,13 @@
                   <Insets left="10.0" />
                </VBox.margin>
             </Button>
+            <CheckBox fx:id="stembox" mnemonicParsing="false" selected="true" text="Index with Stemming">
+               <padding>
+                  <Insets left="10.0" top="10.0" />
+               </padding>
+            </CheckBox>
          </children>
       </VBox>
-      <CheckBox fx:id="stembox" mnemonicParsing="false" selected="true" text="Index with Stemming" GridPane.rowIndex="2">
-         <GridPane.margin>
-            <Insets left="10.0" />
-         </GridPane.margin>
-      </CheckBox>
-      <HBox prefHeight="100.0" prefWidth="200.0" GridPane.rowIndex="3">
-         <children>
-            <Button fx:id="btn_start" mnemonicParsing="false" onAction="#run" prefHeight="31.0" prefWidth="98.0" text="Start Indexing">
-               <HBox.margin>
-                  <Insets left="10.0" right="10.0" />
-               </HBox.margin>
-            </Button>
-            <Button fx:id="btn_reset" mnemonicParsing="false" onAction="#reset" prefHeight="32.0" prefWidth="86.0" text="Reset Index" />
-         </children>
-      </HBox>
       <Text fill="#2b12d3" strokeType="OUTSIDE" strokeWidth="0.0" text="Search Engine Indexer" wrappingWidth="188.017578125">
          <GridPane.margin>
             <Insets left="20.0" />
@@ -93,7 +83,7 @@
             <Font name="System Bold" size="18.0" />
          </font>
       </Text>
-      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="3" GridPane.rowIndex="4">
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="3" GridPane.rowIndex="2">
          <children>
             <Button fx:id="load" mnemonicParsing="false" onAction="#load" text="Load">
                <VBox.margin>
@@ -107,7 +97,7 @@
             </Button>
          </children>
       </VBox>
-      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
          <children>
             <TextField fx:id="loadtxt" prefHeight="26.0" prefWidth="305.0">
                <VBox.margin>
@@ -121,7 +111,7 @@
             </TextField>
          </children>
       </VBox>
-      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="2" GridPane.rowIndex="4">
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="2" GridPane.rowIndex="2">
          <children>
             <Button fx:id="browseload" mnemonicParsing="false" onAction="#browseload" text="Browse">
                <VBox.margin>
@@ -135,7 +125,7 @@
             </Button>
          </children>
       </VBox>
-      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.rowIndex="4">
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.rowIndex="2">
          <children>
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Enter Path to Load Cache &amp; Dictionairy from:" wrappingWidth="237.310546875">
                <VBox.margin>
@@ -163,5 +153,77 @@
             </Button>
          </children>
       </HBox>
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="3" GridPane.rowIndex="1">
+         <children>
+            <Button fx:id="btn_start" mnemonicParsing="false" onAction="#run" prefHeight="31.0" prefWidth="98.0" text="Start Indexing">
+               <VBox.margin>
+                  <Insets bottom="10.0" />
+               </VBox.margin>
+            </Button>
+            <Button fx:id="btn_reset" mnemonicParsing="false" onAction="#reset" prefHeight="32.0" prefWidth="86.0" text="Reset Index" />
+         </children>
+      </VBox>
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.rowIndex="3">
+         <children>
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Enter Path to Load Queries File from:" wrappingWidth="237.310546875">
+               <VBox.margin>
+                  <Insets left="10.0" top="25.0" />
+               </VBox.margin>
+            </Text>
+         </children>
+      </VBox>
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
+         <children>
+            <TextField fx:id="browsequery" prefHeight="26.0" prefWidth="170.0">
+               <VBox.margin>
+                  <Insets top="20.0" />
+               </VBox.margin>
+            </TextField>
+         </children>
+      </VBox>
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="2" GridPane.rowIndex="3">
+         <children>
+            <Button fx:id="browsequerybutton" mnemonicParsing="false" onAction="#browseCorpus" text="Browse">
+               <VBox.margin>
+                  <Insets bottom="20.0" left="10.0" right="20.0" top="20.0" />
+               </VBox.margin>
+            </Button>
+         </children>
+      </VBox>
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="3" GridPane.rowIndex="3">
+         <children>
+            <Button fx:id="executequeries" mnemonicParsing="false" onAction="#browseCorpus" text="Execute Queries">
+               <VBox.margin>
+                  <Insets top="20.0" />
+               </VBox.margin>
+            </Button>
+         </children>
+      </VBox>
+      <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Enter Single Query or Document ID:" wrappingWidth="237.310546875" GridPane.rowIndex="4">
+         <GridPane.margin>
+            <Insets left="10.0" />
+         </GridPane.margin>
+      </Text>
+      <TextField fx:id="singlequery" prefHeight="26.0" prefWidth="170.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+      <Button fx:id="executequery" mnemonicParsing="false" onAction="#browseCorpus" text="Execute Query" GridPane.columnIndex="3" GridPane.rowIndex="4" />
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="2" GridPane.rowIndex="4">
+         <children>
+            <CheckBox fx:id="expandquery" mnemonicParsing="false" prefHeight="37.0" prefWidth="121.0" selected="true" text="Expand Query">
+               <padding>
+                  <Insets left="10.0" top="45.0" />
+               </padding>
+            </CheckBox>
+            <CheckBox fx:id="docidbox" mnemonicParsing="false" prefHeight="27.0" prefWidth="153.0" selected="true" text="Entered Document ID">
+               <padding>
+                  <Insets left="10.0" />
+               </padding>
+            </CheckBox>
+         </children>
+      </VBox>
+      <Button fx:id="resetall" mnemonicParsing="false" onAction="#displayCache" prefHeight="25.0" prefWidth="112.0" text="Reset All" GridPane.columnIndex="1" GridPane.rowIndex="5">
+         <GridPane.margin>
+            <Insets bottom="93.0" />
+         </GridPane.margin>
+      </Button>
    </children>
 </GridPane>

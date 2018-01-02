@@ -17,6 +17,12 @@ public class Searcher {
         regex = Pattern.compile("<top>");
         ranker = new Ranker();
     }
+    public void setParser(Parser parse){
+        parser=parse;
+    }
+    public void setIndexer(Indexer index){
+        indexer=index;
+    }
 
 
     public void multipleQueries(String path){
