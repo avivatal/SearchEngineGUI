@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 public class Searcher {
 
-    ArrayList<String> queryList;
+    HashMap<String,String> queryList; //<query number, query string>
     Pattern regex;
     Parser parser;
     Indexer indexer;
@@ -25,8 +25,10 @@ public class Searcher {
     }
 
 
-    public void multipleQueries(String path){
-        queryList=new ArrayList<>();
+    public HashMap<String, List<String>> multipleQueries(String path){
+        queryList=new HashMap<>();
+        HashMap<String, List<String>> results = new HashMap<>(); //<query number, set of doc ids>
+
         try {
             BufferedReader br = new BufferedReader(new FileReader(path));
             StringBuilder builder = new StringBuilder();
@@ -46,24 +48,33 @@ public class Searcher {
                 tmpQueries.add(docs[j]);
             }
             for(String s : tmpQueries){
+                int startName = s.indexOf(("Number: "));
                 int start = s.indexOf("<title>");
                 int end = s.indexOf("<desc>");
-                if (start != -1 && end != -1) {
+                if (start != -1 && end != -1 && startName!=-1) {
                     s = s.substring(start + 7, end);
-                    queryList.add(s);
+                    String number = s.substring(startName,start);
+                    queryList.put(number,s);
                 }
             }
         }
         catch (Exception e){}
+
+        //send each query to get relevant docs
+        for(String s : queryList.keySet()){
+            results.put(s,getRelevantDocs(queryList.get(s)));
+        }
+        return results;
     }
 
     //gets a single query and returns the relevant documents
-    public void getRelevantDocs(String query){
+    public List<String> getRelevantDocs(String query){
 
         parser.split(query);
         HashSet<String> parsedQuery = parser.getTermsForQuery();
 
         double currentQueryWeight;
+        List<String> list=null;
 
         for(String term : parsedQuery){
 
@@ -140,13 +151,13 @@ public class Searcher {
 
                 //get 50 most relevant docs
                 Map sortedMap=sortByValue(weightsInDocs);
-                List<String> list = new ArrayList<>(sortedMap.keySet());
+                list = new ArrayList<>(sortedMap.keySet());
                 list.subList(0,50);
 
 
             }
             catch (Exception e){}
-        }
+        }return list;
     }
 
     private Map<String, Double> sortByValue(Map<String, Double> map) {

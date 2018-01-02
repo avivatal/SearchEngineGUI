@@ -16,6 +16,8 @@ import java.io.*;
 import java.util.*;
 
 import javafx.scene.control.Alert;
+
+import javax.xml.crypto.dsig.keyinfo.KeyValue;
 //import jdk.nashorn.internal.ir.debug.ObjectSizeCalculator;
 
 
@@ -155,29 +157,61 @@ public class Controller {
      */
     public void getQuery(){
 
+        List<String> list=null;
         long startTime=System.currentTimeMillis();
         if(singlequery.getText() != ""){
-        if(docidbox.isSelected())
-        {
-            docName=singlequery.getText().trim();
-            ///new punction
-        }
-        else {
+            if(docidbox.isSelected())
+            {
+                docName=singlequery.getText().trim();
+                ///new punction
+            }
+            else {
 
-            query = singlequery.getText().trim();
-            searcher.getRelevantDocs(query);
-        }
+                query = singlequery.getText().trim();
+                list=searcher.getRelevantDocs(query);
+            }
         }
         long totalTime=System.currentTimeMillis()-startTime;
+        StringBuilder results = new StringBuilder();
+        for(String s:list){
+            results.append(s+"\n");
+        }
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setContentText("The query has been successfuly executed.\n" +
+                "The number of documents that have been retrieved is: "+list.size()+
+        "\nThe total runtime is: "+totalTime+"" +
+                "\nThe document IDs retrieved are: \n"+results.toString());
+        alert.show();
+
     }
 
     public void getQueryPath()
     {
+        long startTime=System.currentTimeMillis();
         if(queryPath!=""){
             queryPath=browsequery.getText();
         }
 
-        searcher.multipleQueries(queryPath);
+        StringBuilder result = new StringBuilder();
+        HashMap<String, List<String>> results = searcher.multipleQueries(queryPath);
+        int totalSize=0;
+        for(Map.Entry<String, List<String>>  entry : results.entrySet()){
+            result.append("Query Number: "+entry.getKey()+"\nResults:\n");
+            for(String s:entry.getValue()){
+                result.append(s+"\n");
+                totalSize++;
+            }
+        }
+
+        long totalTime=System.currentTimeMillis()-startTime;
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setContentText("The queries have been successfuly executed.\n" +
+                "The number of documents that have been retrieved is: "+totalSize+
+                "\nThe total runtime is: "+totalTime+"" +
+                "\nThe document IDs retrieved are: \n"+result.toString());
+        alert.show();
+
+
     }
     /**
      * opens a directory chooser to select the directory to save the posting files in
@@ -234,11 +268,11 @@ public class Controller {
                     String cache;
                     String dict;
                     if(stembox.isSelected()){
-                         cache = "/cacheStemmed.ser";
-                         dict = "/dictionairyStemmed.ser";
+                        cache = "/cacheStemmed.ser";
+                        dict = "/dictionairyStemmed.ser";
                     }else{
-                         cache = "/cacheNotStemmed.ser";
-                         dict = "/dictionairyNotStemmed.ser";
+                        cache = "/cacheNotStemmed.ser";
+                        dict = "/dictionairyNotStemmed.ser";
                     }
 
                     ObjectOutputStream outCache = new ObjectOutputStream(new FileOutputStream(savePath+cache));
@@ -373,7 +407,7 @@ public class Controller {
                     alert.show();
 
                 }catch (NullPointerException e){
-                         e.printStackTrace();
+                    e.printStackTrace();
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setContentText("File Path Invalid");
                     alert.show();
@@ -383,7 +417,7 @@ public class Controller {
                     browse2.setDisable(false);
                 }
                 catch (FileNotFoundException e){
-                        e.printStackTrace();
+                    e.printStackTrace();
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setContentText("File Path Invalid");
                     alert.show();
@@ -562,40 +596,40 @@ public class Controller {
                 dictB.setDisable(false);
             }
             else{
-            //sort the terms in the cache lexicographically
-            SortedSet<String> sortedKeys = new TreeSet<String>(cache.keySet());
+                //sort the terms in the cache lexicographically
+                SortedSet<String> sortedKeys = new TreeSet<String>(cache.keySet());
 
-            ObservableList<String> items= FXCollections.observableArrayList();
-            int counter=1;
-            for (String term : sortedKeys) {
-                items.add(term+ ": "+cache.get(term));
-                counter++;
-            }
+                ObservableList<String> items= FXCollections.observableArrayList();
+                int counter=1;
+                for (String term : sortedKeys) {
+                    items.add(term+ ": "+cache.get(term));
+                    counter++;
+                }
 
-            Stage newstage = new Stage();
-            newstage.setTitle("Cache");
-            BorderPane pane = new BorderPane();
-            Scene scene = new Scene(pane);
-            newstage.setScene(scene);
-            ListView<String> list = new ListView<>();
-            list.setItems(items);
-            pane.setCenter(list);
-            newstage.setAlwaysOnTop(true);
-            newstage.setOnCloseRequest(
-                    e -> {
-                        e.consume();
-                        newstage.close();
-                    });
-            newstage.showAndWait();
+                Stage newstage = new Stage();
+                newstage.setTitle("Cache");
+                BorderPane pane = new BorderPane();
+                Scene scene = new Scene(pane);
+                newstage.setScene(scene);
+                ListView<String> list = new ListView<>();
+                list.setItems(items);
+                pane.setCenter(list);
+                newstage.setAlwaysOnTop(true);
+                newstage.setOnCloseRequest(
+                        e -> {
+                            e.consume();
+                            newstage.close();
+                        });
+                newstage.showAndWait();
 
 
-            btn_start.setDisable(false);
-            btn_reset.setDisable(false);
-            browse1.setDisable(false);
-            browse2.setDisable(false);
-            cacheB.setDisable(false);
-            dictB.setDisable(false);
-        }}
+                btn_start.setDisable(false);
+                btn_reset.setDisable(false);
+                browse1.setDisable(false);
+                browse2.setDisable(false);
+                cacheB.setDisable(false);
+                dictB.setDisable(false);
+            }}
         catch (NullPointerException e){
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setContentText("Must Index First In Order to Display Cache!");
@@ -629,43 +663,43 @@ public class Controller {
                 dictB.setDisable(false);
             }
             else{
-            //sort the terms in the cache lexicographically
-            SortedSet<String> sortedKeys = new TreeSet<String>(dictionairy.keySet());
+                //sort the terms in the cache lexicographically
+                SortedSet<String> sortedKeys = new TreeSet<String>(dictionairy.keySet());
 
-            ObservableList<String> items= FXCollections.observableArrayList();
-            int counter=1;
-            for (String term : sortedKeys) {
-                StringBuilder TermDetails = new StringBuilder();
-                TermDetails.append(counter+") "+term + ": "+dictionairy.get(term).getTotalOccurencesInCorpus()+" Occurrences in Corpus");
+                ObservableList<String> items= FXCollections.observableArrayList();
+                int counter=1;
+                for (String term : sortedKeys) {
+                    StringBuilder TermDetails = new StringBuilder();
+                    TermDetails.append(counter+") "+term + ": "+dictionairy.get(term).getTotalOccurencesInCorpus()+" Occurrences in Corpus");
 
-                items.add(TermDetails.toString());
-                counter++;
-            }
+                    items.add(TermDetails.toString());
+                    counter++;
+                }
 
-            Stage newstage = new Stage();
-            newstage.setTitle("Dictionairy");
-            BorderPane pane = new BorderPane();
-            Scene scene = new Scene(pane);
-            newstage.setScene(scene);
-            ListView<String> list = new ListView<>();
-            list.setItems(items);
-            pane.setCenter(list);
-            newstage.setAlwaysOnTop(true);
-            newstage.setOnCloseRequest(
-                    e -> {
-                        e.consume();
-                        newstage.close();
-                    });
-            newstage.showAndWait();
+                Stage newstage = new Stage();
+                newstage.setTitle("Dictionairy");
+                BorderPane pane = new BorderPane();
+                Scene scene = new Scene(pane);
+                newstage.setScene(scene);
+                ListView<String> list = new ListView<>();
+                list.setItems(items);
+                pane.setCenter(list);
+                newstage.setAlwaysOnTop(true);
+                newstage.setOnCloseRequest(
+                        e -> {
+                            e.consume();
+                            newstage.close();
+                        });
+                newstage.showAndWait();
 
 
-            btn_start.setDisable(false);
-            btn_reset.setDisable(false);
-            browse1.setDisable(false);
-            browse2.setDisable(false);
-            cacheB.setDisable(false);
-            dictB.setDisable(false);
-        }}
+                btn_start.setDisable(false);
+                btn_reset.setDisable(false);
+                browse1.setDisable(false);
+                browse2.setDisable(false);
+                cacheB.setDisable(false);
+                dictB.setDisable(false);
+            }}
         catch (NullPointerException e){
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setContentText("Must Index First In Order to Display Dictionary!");
