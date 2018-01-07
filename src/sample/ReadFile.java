@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.regex.Pattern;
 
 /**
@@ -64,15 +66,15 @@ public class ReadFile
     public void read(String corpusPath) throws FileNotFoundException{
 
         counter=0;
-        ArrayList<String> documents=new ArrayList<>();
+        HashMap<String,HashSet<String>> documents=new HashMap<>();
         File corpusFolder = new File(corpusPath);
         File[] listOfFiles = corpusFolder.listFiles();
         int corpusSize = listOfFiles.length;
 
-        while(counter<corpusSize){
+        while(counter<4){
             documents.clear();
             //reads in groups of 70 files to parse+index each group separately
-            for(int i=0; i<70 && counter<corpusSize; i++){
+            for(int i=0; i<2 && counter<corpusSize; i++){
                 try {
                     String path = listOfFiles[counter].getPath() + "/" + listOfFiles[counter].getName();
                     BufferedReader br = new BufferedReader(new FileReader(path));
@@ -89,7 +91,9 @@ public class ReadFile
 
                     String[] docs = regex.split(builder.toString());
                     for (int j = 1; j < docs.length; j++) {
-                        documents.add(docs[j]);
+                        if(!documents.containsKey(listOfFiles[counter].getName()))
+                            documents.put(listOfFiles[counter].getName(),new HashSet<String>());
+                        documents.get(listOfFiles[counter].getName()).add(docs[j]);
                     }
                     counter++;
                 }

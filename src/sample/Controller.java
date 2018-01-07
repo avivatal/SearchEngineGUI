@@ -69,14 +69,14 @@ public class Controller {
         searcher=new Searcher();
         searcher.setParser(rf.ctrl.parser);
         searcher.setIndexer(rf.ctrl.indexer);
-        docName="Los Angeles just may be the City of Angeles. The parents of the high school"+
- "students are apt to believe it when they learn what the operations people of"+
-     "   Northwest Airlines at Los Angeles International Airport did last month. "+
-"</P><P> When Northwest's Flight 190 was being buttoned down for its 12:30 p.m.  departure, nearly half of a group of 40 Japanese high school students were still mired in U.S. Customs following their long flight from Japan. </P> <P>"+
+        docName="</P><P> Los Angeles just may be the City of Angeles. The parents of the high school"+
+                "students are apt to believe it when they learn what the operations people of"+
+                "   Northwest Airlines at Los Angeles International Airport did last month. "+
+                "</P><P> When Northwest's Flight 190 was being buttoned down for its 12:30 p.m.  departure, nearly half of a group of 40 Japanese high school students were still mired in U.S. Customs following their long flight from Japan. </P> <P>"+
                 "Northwest put compassion over schedule and waited more than an hour until the final one of the group, none of whom could speak English, was on board. They"+
-       " were, in fact, bound for the Puget Sound area for a three-week intensive"+
-       " English language course preparatory to going on to Phoenix and a yearlong"+
-       " exchange program. "+ "</P> <P> But one of the flight attendants said,";
+                " were, in fact, bound for the Puget Sound area for a three-week intensive"+
+                " English language course preparatory to going on to Phoenix and a yearlong"+
+                " exchange program. "+ "</P> <P> But one of the flight attendants said,";
     }
 
     /**
@@ -167,12 +167,13 @@ public class Controller {
      * get query input from user
      */
     public void getQuery(){
-
+        corpusPath="C:/Users/avevanes/Downloads/corpus";
+        destinationDirectory="C:/Users/avevanes/Downloads";
         rf.ctrl.setWithStemming(stembox.isSelected());
-        rf.ctrl.setPaths("C:/Users/avevanes/Downloads/corpus/stop_words.txt","C:/Users/avevanes/Downloads");
+        rf.ctrl.setPaths(corpusPath+"/stop_words.txt",destinationDirectory);
         searcher.parser.setStopwords(rf.ctrl.getStopwords());
         searcher.parser.setIsQuery(true);
-        destinationDirectory="C:/Users/avevanes/Downloads";
+
         try {
             ObjectInputStream docWeight = new ObjectInputStream(new FileInputStream(destinationDirectory+"/"+rf.ctrl.directory+"/docWeightsWithStem.ser"));
             rf.ctrl.indexer.setDocWeights((HashMap<String,Double>)docWeight.readObject());
@@ -185,23 +186,51 @@ public class Controller {
         catch (Exception e){}
 
 
+
         List<String> list=null;
         long startTime=System.currentTimeMillis();
         if(singlequery.getText() != ""){
             if(docidbox.isSelected())
             {
                 Summarizer summary=new Summarizer();
-                docName=singlequery.getText().trim();
+                summary.parser.setStopwords(rf.ctrl.getStopwords());
+                summary.setCorpusPath(corpusPath);
+                summary.setWithStemming(stembox.isSelected());
+               // docName=singlequery.getText().trim();
                 summary.docSummary(docName);
-                ///new punction
+              //  list = summary.getList();
             }
             else {
-
+                long totalTime=System.currentTimeMillis()-startTime;
                 query = singlequery.getText().trim();
                 list=searcher.getRelevantDocs(query);
+
+                ObservableList<String> items= FXCollections.observableArrayList();
+                items.add("The number of documents that have been retrieved is: "+list.size());
+                items.add("The total runtime is: "+totalTime);
+                items.add("The document IDs retrieved are: ");
+                for(String s:list){
+                    items.add(s);
+                }
+
+                Stage newstage = new Stage();
+                newstage.setTitle("Results");
+                BorderPane pane = new BorderPane();
+                Scene scene = new Scene(pane);
+                newstage.setScene(scene);
+                ListView<String> listView = new ListView<>();
+                listView.setItems(items);
+                pane.setCenter(listView);
+                newstage.setAlwaysOnTop(true);
+                newstage.setOnCloseRequest(
+                        e -> {
+                            e.consume();
+                            newstage.close();
+                        });
+                newstage.showAndWait();
             }
         }
-        long totalTime=System.currentTimeMillis()-startTime;/*
+
         StringBuilder results = new StringBuilder();
         for(String s:list){
             results.append(s+"\n");
@@ -213,32 +242,10 @@ public class Controller {
         "\nThe total runtime is: "+totalTime+"" +
                 "\nThe document IDs retrieved are: \n"+results.toString());
         alert.show();
-*/
 
 
-        ObservableList<String> items= FXCollections.observableArrayList();
-        items.add("The number of documents that have been retrieved is: "+list.size());
-        items.add("The total runtime is: "+totalTime);
-        items.add("The document IDs retrieved are: ");
-        for(String s:list){
-            items.add(s);
-        }
 
-        Stage newstage = new Stage();
-        newstage.setTitle("Results");
-        BorderPane pane = new BorderPane();
-        Scene scene = new Scene(pane);
-        newstage.setScene(scene);
-        ListView<String> listView = new ListView<>();
-        listView.setItems(items);
-        pane.setCenter(listView);
-        newstage.setAlwaysOnTop(true);
-        newstage.setOnCloseRequest(
-                e -> {
-                    e.consume();
-                    newstage.close();
-                });
-        newstage.showAndWait();
+
 
     }
 

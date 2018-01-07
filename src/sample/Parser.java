@@ -102,25 +102,26 @@ public class Parser {
      * @param rfDocs list of documents in current file group
      * @param stopwords words not to be parsed
      */
-    public void parse(ArrayList<String> rfDocs, HashMap<String, String> stopwords){
+    public void parse(HashMap<String,HashSet<String>> rfDocs, HashMap<String, String> stopwords){
         stemmedTerms.clear();
         this.stopwords=stopwords;
         try {
+            for (String file:rfDocs.keySet()) {
             //iterate over all docs, for each word in doc - parse and stem (if checked)
-            for(int i=0; i<rfDocs.size(); i++){
+           for(String doc:rfDocs.get(file)){
                 docNumber++;
                 numberOfTermsInDoc=0;
                 mostFrequentTerm="";
                 maxTF = new TermInDoc("null", 0, false);
-                docName=extractName(rfDocs.get(i));
+                docName=extractName(doc);
                 documentProperties.put(docName,docNumber+"");
-                split(extractText(rfDocs.get(i)));
+                split(extractText(doc));
 
                 docLenghts.put(docName,numberOfTermsInDoc);
                 //write document properties
-                writer.println(docName+": "+numberOfTermsInDoc+", "+mostFrequentTerm+", "+maxTF.getTf()); //for each document save properties on disk
+                writer.println(docName+": "+numberOfTermsInDoc+", "+mostFrequentTerm+", "+maxTF.getTf()+", "+file); //for each document save properties on disk
                 writer.flush();
-            }
+            }}
 
         }catch(Exception e){e.printStackTrace();};
     }
@@ -157,7 +158,7 @@ public class Parser {
      */
     public void split(String text) {
 
-        String[] splited = text.split("\\-+|\\s+|\\\n+|\\(+|\\)+|\\;+|\\:+|\\?+|\\!+|\\<+|\\>+|\\}+|\\{+|\\]+|\\[+|\\*+|\\++|\\|+|\\\"+|\\=+|\\#+|\\`+|\\\\+");
+        String[] splited = text.split("\\-+|\\s+|\\\n+|\\(+|\\)+|\\;+|\\:+|\\?+|\\!+|\\<+|\\>+|\\}+|\\{+|\\]+|\\[+|\\*+|\\++|\\|+|\\\"+|\\=+|\\#+|\\`+|\\\\+|\\</P>|\\<P>");
         // String[] splited = regex.split(text);
 
         int splitedlen = splited.length;
@@ -167,7 +168,7 @@ public class Parser {
             //avoid parsing empty strings
             splited[j].trim();
             splited[j] = cleanFromStart(splited[j]);
-            if (!(splited[j].equals("") || splited[j].equals(" ")) && splited[j].length() > 0) {
+            if (!(splited[j].equals("") || splited[j].equals(" ")||splited[j].equals("P")) && splited[j].length() > 0) {
 
 
                 int splitedj = splited[j].length();
@@ -670,10 +671,10 @@ public class Parser {
             termsForQuery.add(term);
             if(docSummary){
                 if(termsTF.containsKey(term)){
-                    int currentTF = termsTF.get(term);
-                    termsTF.put(term, ++currentTF);
+                    int currentTF = termsTF.get(term)+1;
+                    termsTF.put(term, currentTF);
                 }
-                termsTF.put(term,1);
+                else termsTF.put(term,1);
 
             }
         }
@@ -685,7 +686,7 @@ public class Parser {
         termsTF.clear();
         termsForQuery.clear();
 
-        String[] sentences = document.split(".");
+        String[] sentences = document.split("\\.");
         for(String s : sentences){
             split(s);
             sentenceTerms.put(s,new HashSet<>(termsForQuery));

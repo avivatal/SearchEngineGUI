@@ -79,7 +79,7 @@ public class Control {
      * activates the parsing and indexing the current group of documents.
      * @param documents the current group of documents passed on from the readFile
      */
-    public void control(ArrayList<String> documents) {
+    public void control(HashMap<String,HashSet<String>> documents) {
 
         //parse docs in current file
         parser.parse(documents, stopwords);
