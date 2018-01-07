@@ -2,6 +2,7 @@ package sample;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.PrintWriter;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -12,6 +13,7 @@ public class Searcher {
     Parser parser;
     Indexer indexer;
     Ranker ranker;
+    ArrayList<String> queryNumbers;
 
     public Searcher(){
         regex = Pattern.compile("<top>");
@@ -26,6 +28,7 @@ public class Searcher {
 
 
     public HashMap<String, List<String>> multipleQueries(String path){
+        queryNumbers = new ArrayList();
         queryList=new HashMap<>();
         HashMap<String, List<String>> results = new HashMap<>(); //<query number, set of doc ids>
 
@@ -56,8 +59,9 @@ public class Searcher {
                 String temp=s;
                 if (start != -1 && end != -1 && startName!=-1 &&endDis!=-1 && startDis!=-1) {
                     s = s.substring(start + 7, end)+" "+temp.substring(startDis+12,endDis);
-                    String number = temp.substring(startName,start);
+                    String number = temp.substring(startName+8,start);
                     queryList.put(number,s);
+                    queryNumbers.add(number);
                 }
             }
         }
@@ -111,6 +115,7 @@ public class Searcher {
                     for (int i = 0; i < charsInLine.length; i++) {
                         if (charsInLine[i] == '(') {
                             i++;
+
                             //docID
                             StringBuilder docID = new StringBuilder();
                             while (charsInLine[i] != ' ') {
@@ -124,22 +129,45 @@ public class Searcher {
                                 tf.append(charsInLine[i]);
                                 i++;
                             }
+                            StringBuilder index=new StringBuilder();
                             while (charsInLine[i] != ')') {
+                                index.append(charsInLine[i]);
                                 i++;
                             }
                             i++;
 
-                            int docLength = indexer.docLengths.get(docID.toString());
+                            double docLength = indexer.docLengths.get(docID.toString());
 
                             //calculate weight
                             double tfnormal = Double.parseDouble(tf.toString()) / docLength;
 
+                            double k=1.2;
+                            double b = 0.75;
+                            double bm25;
+                            double bmidf = indexer.docLengths.size() - indexer.getDictionairy().get(term).getNumberOfDocumentsOccuresIn() + 0.5;
+                            bmidf = bmidf/(indexer.getDictionairy().get(term).getNumberOfDocumentsOccuresIn()+0.5);
+                            bmidf = Math.log10(bmidf)/Math.log10(2);
+                            double lenNormal = docLength / 244.906;
+                            double bm_mone = Double.parseDouble(tf.toString()) * (k+1);
+                            double bm_mechane = Double.parseDouble(tf.toString()) + k*(1-b+b*lenNormal);
+                            bm25= bmidf * (bm_mone / bm_mechane);
+
+
+                            double tfAndIndex = docLength - Double.parseDouble(index.toString());
+                            tfAndIndex = tfAndIndex / docLength;
+                            tfAndIndex *= Double.parseDouble(tf.toString());
+
+
+
                             if (weightsInDocs.containsKey(docID.toString())) {
                                 double currentWeight = weightsInDocs.get(docID.toString());
-                                currentWeight += tfnormal * idf;
+                                currentWeight += (tfnormal * idf)*0.3 + (bm25*0.6) + (tfAndIndex * 0.1);
+                                //currentWeight+= docLength/(Double.parseDouble(index.toString()))*0.05;
                                 weightsInDocs.put(docID.toString(), currentWeight);
                             } else {
-                                weightsInDocs.put(docID.toString(), tfnormal * idf);
+                                double currentWeight = (tfnormal * idf)*0.3 + (bm25*0.6) + (tfAndIndex * 0.1);
+                               // currentWeight += docLength/(Double.parseDouble(index.toString()))*0.05;
+                                weightsInDocs.put(docID.toString(), currentWeight);
                             }
                         }
                     }} catch (Exception e){}
@@ -152,15 +180,18 @@ public class Searcher {
             double docConst = indexer.docWeights.get(s);
             docConst=docConst*parsedQuery.size();
             docConst=Math.sqrt(docConst);
+            double cossim = weightsInDocs.get(s)/docConst;
             weightsInDocs.put(s,weightsInDocs.get(s)/docConst);
         }
 
         //get 50 most relevant docs
         Map sortedMap=sortByValue(weightsInDocs);
         list = new ArrayList<>(sortedMap.keySet());
-        list=list.subList(0,50);
+        list=list.subList(0,Math.min(50,list.size()));
         return list;
     }
+
+
 
 
 

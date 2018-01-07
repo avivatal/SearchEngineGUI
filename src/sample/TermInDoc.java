@@ -9,12 +9,14 @@ public class TermInDoc implements Comparable, Serializable {
 
     String DocId;
     int tf;
-    boolean isInFirst100Terms;
+   // boolean isInFirst100Terms;
+    int index; //index of first occurence of term
 
-    public TermInDoc(String docId, int tf, boolean isInFirst100Terms) {
+    public TermInDoc(String docId, int tf, int index) {
         DocId = docId;
         this.tf = tf;
-        this.isInFirst100Terms = isInFirst100Terms;
+        this.index=index;
+        //this.isInFirst100Terms = isInFirst100Terms;
     }
 
     /**
@@ -63,17 +65,17 @@ public class TermInDoc implements Comparable, Serializable {
      * returns if the term is in the first 100 terms in this document
      * @return true if is in first 100 terms in doc, otherwise false
      */
-    public boolean isInFirst100Terms() {
-        return isInFirst100Terms;
+    public int getIndex() {
+        return index;
     }
 
 
     /**
      * sets whether the term is in the first 100 terms in this document
-     * @param inFirst100Terms true if is in first 100 terms in doc, otherwise false
+     * @param index true if is in first 100 terms in doc, otherwise false
      */
-    public void setInFirst100Terms(boolean inFirst100Terms) {
-        isInFirst100Terms = inFirst100Terms;
+    public void setIndex(int index) {
+       this.index = index;
     }
 
     /**
@@ -102,7 +104,7 @@ public class TermInDoc implements Comparable, Serializable {
      */
     @Override
     public String toString() {
-        return "("+DocId+" "+tf+" "+String.valueOf(isInFirst100Terms)+")";
+        return "("+DocId+" "+tf+" "+ index+")";
     }
 
 

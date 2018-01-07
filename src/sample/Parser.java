@@ -112,7 +112,7 @@ public class Parser {
                 docNumber++;
                 numberOfTermsInDoc=0;
                 mostFrequentTerm="";
-                maxTF = new TermInDoc("null", 0, false);
+                maxTF = new TermInDoc("null", 0, -1);
                 docName=extractName(doc);
                 documentProperties.put(docName,docNumber+"");
                 split(extractText(doc));
@@ -635,9 +635,9 @@ public class Parser {
         if(!isQuery) {
             //if term is new in hashmap
             if (!stemmedTerms.containsKey(term)) {
-                TermInDoc tid = new TermInDoc(docName, 1, false);
-                if (numberOfTermsInDoc < 100) {
-                    tid.setInFirst100Terms(true);
+                TermInDoc tid = new TermInDoc(docName, 1, -1);
+                if (tid.getIndex()==-1) {
+                    tid.setIndex(numberOfTermsInDoc);
                 }
                 HashMap<String, TermInDoc> map = new HashMap<>();
                 map.put(docName, tid);
@@ -655,9 +655,9 @@ public class Parser {
                 }
                 //if doc doesnt appear in stemmed term, create new TermInDoc entry
                 else {
-                    stemmedTerms.get(term).put(docName, new TermInDoc(docName, 1, false));
-                    if (numberOfTermsInDoc < 100) {
-                        stemmedTerms.get(term).get(docName).setInFirst100Terms(true);
+                    stemmedTerms.get(term).put(docName, new TermInDoc(docName, 1, -1));
+                    if (stemmedTerms.get(term).get(docName).getIndex()==-1) {
+                        stemmedTerms.get(term).get(docName).setIndex(numberOfTermsInDoc);
                     }
                 }
                 if (stemmedTerms.get(term).get(docName).getTf() > maxTF.getTf()) {

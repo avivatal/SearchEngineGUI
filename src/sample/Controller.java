@@ -259,7 +259,6 @@ public class Controller {
 
     public void getQueryPath()
     {
-        ///////
         rf.ctrl.setWithStemming(stembox.isSelected());
         rf.ctrl.setPaths("C:/Users/avevanes/Downloads/corpus/stop_words.txt","C:/Users/avevanes/Downloads");
         searcher.parser.setStopwords(rf.ctrl.getStopwords());
@@ -286,37 +285,37 @@ public class Controller {
 
         StringBuilder result = new StringBuilder();
         HashMap<String, List<String>> results = searcher.multipleQueries(queryPath);
-        int totalSize=0;
- /*       for(Map.Entry<String, List<String>>  entry : results.entrySet()){
-            result.append("Query Number: "+entry.getKey()+"\nResults:\n");
-            for(String s:entry.getValue()){
-                result.append(s+"\n");
-                totalSize++;
-            }
-        }
 
-        long totalTime=System.currentTimeMillis()-startTime;
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setContentText("The queries have been successfuly executed.\n" +
-                "The number of documents that have been retrieved is: "+totalSize+
-                "\nThe total runtime is: "+totalTime+"" +
-                "\nThe document IDs retrieved are: \n"+result.toString());
-        alert.show();*/
-////
+        int totalSize=0;
+
+        //write results to file - MOVE TO DIFFERENT FUNCTION, CHANGE WRITE PATH
+        try {
+
+            PrintWriter writer = new PrintWriter(destinationDirectory+"/queryResults.txt","UTF-8");
+            for(String s : searcher.queryNumbers){
+                for(String docid : results.get(s)){
+                    writer.println(s+" 0 "+docid+" 1 42.38 mt");
+                    writer.flush();
+                }
+            }
+            writer.close();
+
+
+        }catch (Exception e){}
 
         long totalTime=System.currentTimeMillis()-startTime;
 
         ObservableList<String> items= FXCollections.observableArrayList();
-        for(Map.Entry<String, List<String>>  entry : results.entrySet()){
-            items.add("The queries have been successfuly executed.");
-            items.add("The number of documents that have been retrieved is: "+totalSize);
-            items.add("The total runtime is: "+totalTime);
+        items.add("The queries have been successfuly executed.");
+        items.add("The total runtime is: "+totalTime);
+        for(String s   : results.keySet()){
+            items.add("Query Number: "+s);
+            items.add("The number of documents that have been retrieved is: "+results.get(s).size());
             items.add("The document IDs retrieved are: "+result.toString());
-            items.add("Query Number: "+entry.getKey());
             items.add("Results: ");
-            for(String s:entry.getValue()){
-                items.add(s);
-                totalSize++;
+
+            for(String doc : results.get(s)){
+                items.add(doc);
             }
         }
 
