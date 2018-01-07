@@ -58,7 +58,7 @@ public class Controller {
     String loadPath;
     String queryPath;
     String query;
-    String docName;
+    //String docName;
     private Searcher searcher;
 
     public Controller() {
@@ -69,14 +69,14 @@ public class Controller {
         searcher=new Searcher();
         searcher.setParser(rf.ctrl.parser);
         searcher.setIndexer(rf.ctrl.indexer);
-        docName="</P><P> Los Angeles just may be the City of Angeles. The parents of the high school"+
+       /* docName="</P><P> Los Angeles just may be the City of Angeles. The parents of the high school"+
                 "students are apt to believe it when they learn what the operations people of"+
                 "   Northwest Airlines at Los Angeles International Airport did last month. "+
                 "</P><P> When Northwest's Flight 190 was being buttoned down for its 12:30 p.m.  departure, nearly half of a group of 40 Japanese high school students were still mired in U.S. Customs following their long flight from Japan. </P> <P>"+
                 "Northwest put compassion over schedule and waited more than an hour until the final one of the group, none of whom could speak English, was on board. They"+
                 " were, in fact, bound for the Puget Sound area for a three-week intensive"+
                 " English language course preparatory to going on to Phoenix and a yearlong"+
-                " exchange program. "+ "</P> <P> But one of the flight attendants said,";
+                " exchange program. "+ "</P> <P> But one of the flight attendants said,";*/
     }
 
     /**
@@ -196,11 +196,33 @@ public class Controller {
                 summary.parser.setStopwords(rf.ctrl.getStopwords());
                 summary.setCorpusPath(corpusPath);
                 summary.setWithStemming(stembox.isSelected());
-               // docName=singlequery.getText().trim();
-                summary.docSummary(docName);
-              //  list = summary.getList();
+                ArrayList<String> result = summary.readFile(singlequery.getText().trim());
+
+                ObservableList<String> items= FXCollections.observableArrayList();
+                for(int i=0;i<result.size();i++){
+                    items.add(result.get(i));
+                }
+
+                Stage newstage = new Stage();
+                newstage.setTitle("Results");
+                BorderPane pane = new BorderPane();
+                Scene scene = new Scene(pane);
+                newstage.setScene(scene);
+                ListView<String> listView = new ListView<>();
+                listView.setItems(items);
+                pane.setCenter(listView);
+                newstage.setAlwaysOnTop(true);
+                newstage.setOnCloseRequest(
+                        e -> {
+                            e.consume();
+                            newstage.close();
+                        });
+                newstage.showAndWait();
+
+
             }
-            else {
+            else
+                {
                 long totalTime=System.currentTimeMillis()-startTime;
                 query = singlequery.getText().trim();
                 list=searcher.getRelevantDocs(query);
@@ -230,20 +252,6 @@ public class Controller {
                 newstage.showAndWait();
             }
         }
-
-        StringBuilder results = new StringBuilder();
-        for(String s:list){
-            results.append(s+"\n");
-        }
-
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setContentText("The query has been successfuly executed.\n" +
-                "The number of documents that have been retrieved is: "+list.size()+
-        "\nThe total runtime is: "+totalTime+"" +
-                "\nThe document IDs retrieved are: \n"+results.toString());
-        alert.show();
-
-
 
 
 

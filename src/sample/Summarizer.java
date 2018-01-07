@@ -14,14 +14,15 @@ public class Summarizer {
     public Summarizer(){
         parser=new Parser();
     }
-    public void readFile(String docname) {
+    public ArrayList<String> readFile(String docname) {
 
+        ArrayList<String> newArrayList=null;
         try {
             String docpath = corpusPath + "/" + directory + "/documents.txt";
             BufferedReader br = new BufferedReader(new FileReader(docpath));
             String aux = "";
             while ((aux = br.readLine()) != null) {
-                if(aux.startsWith(docname)){
+                if(aux.startsWith(docname+":")){
                     break;
                 }
             }
@@ -29,7 +30,7 @@ public class Summarizer {
 
             String[] docProperties = aux.split("\\, ");
 
-            String path = corpusPath + "/"  + docProperties[3]+"/"+docProperties[3];
+            String path = corpusPath + "/corpus/"  + docProperties[3]+"/"+docProperties[3];
             BufferedReader docReader = new BufferedReader(new FileReader(path));
             StringBuilder builder = new StringBuilder();
             String filetxt = "";
@@ -42,34 +43,38 @@ public class Summarizer {
                 //extract document
                 String[] docs = builder.toString().split("<DOC>");
                 String text="";
-                for(int i=0; i<docs.length; i++){
-                    String s = docs[i].substring(docs[i].indexOf("<DOCNO>")+7, docs[i].indexOf("</DOCNO>")).trim();
-                    if(s.equals(docname)){
-                        if(s.length()>6) {
-                            int start = s.indexOf("<TEXT>");
-                            int end = s.indexOf("</TEXT>");
-                            if (start != -1 && end != -1) {
-                                text = docs[i].substring(start + 6, end);
-                                docSummary(text);
+                for(int i=0; i<docs.length; i++) {
+                    if (!docs[i].equals("")) {
+                        String s = docs[i].substring(docs[i].indexOf("<DOCNO>") + 7, docs[i].indexOf("</DOCNO>")).trim();
+                        if (s.equals(docname)) {
+                            if (s.length() > 6) {
+                                int start = docs[i].indexOf("<TEXT>");
+                                int end = docs[i].indexOf("</TEXT>");
+                                if (start != -1 && end != -1) {
+                                    text = docs[i].substring(start + 6, end);
+                                    newArrayList = docSummary(text);
+                                }
                             }
+                            break;
                         }
-                        break;
                     }
                 }
-
             } catch (Exception e) {
                 e.printStackTrace();
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return newArrayList;
     }
 
-    public void docSummary(String document){
+    public ArrayList<String> docSummary(String document){
 
         parser.setDocSummary(true);
         parser.setIsQuery(true);
-        HashMap<String, HashSet<String>> sentenceTerms = parser.summarize(document);
+        String[] sentences = document.split("\\.");
+
+        HashMap<String, HashSet<String>> sentenceTerms = parser.summarize(sentences);
         HashMap<String, Double> sentenceTF = new HashMap<>();
         HashMap<String, Integer> termsTF = parser.getTermsTF();
 
@@ -79,11 +84,21 @@ public class Summarizer {
             int totalSentenceTF=0;
             for(String term : sentenceTerms.get(sntnce)){
                 double tf;
-                if(sentenceTF.containsKey(sntnce)) {
-                    tf = termsTF.get(term) + sentenceTF.get(sntnce); //add term tf in doc to current total sentence tf
-                }else{  tf = termsTF.get(term);}
+                boolean isNumber;
+                try {
+                    double d=Double.parseDouble(term);
+                    isNumber=true;
+                }
+                catch (Exception e){
+                    isNumber=false;
+                }
+                if(!isNumber){
+                    if(sentenceTF.containsKey(sntnce)) {
+                        tf = termsTF.get(term) + sentenceTF.get(sntnce); //add term tf in doc to current total sentence tf
+                    }else{  tf = termsTF.get(term);}
 
-                sentenceTF.put(sntnce,tf);
+                    sentenceTF.put(sntnce,tf);
+                }
             }
 
             //  double termcount=sentenceTF.get(sntnce)/sentenceTerms.get(sntnce).size();
@@ -105,17 +120,13 @@ public class Summarizer {
         List<String> list = new ArrayList<>(sortedMap.keySet());
         list=list.subList(0,5);
 
-
-
-      /*  for(String sentence : sentences){
-
-            parser.setIsQuery(true);
-            parser.split(sentence);
-            parser.getTermsForQuery()
-
-        }*/
-
-
+        ArrayList<String> result = new ArrayList<>();
+        for(int i=0; i<sentences.length; i++){
+            if(list.contains(sentences[i])){
+                result.add("Score: "+list.indexOf(sentences[i])+"\n "+sentences[i]);
+            }
+        }
+        return result;
     }
 
     private Map<String, Double> sortByValue(Map<String, Double> map) {
@@ -145,5 +156,6 @@ public class Summarizer {
         else{
             directory="noStem";
         }
+        parser.setWithStemming(b);
     }
 }

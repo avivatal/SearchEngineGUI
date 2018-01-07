@@ -680,13 +680,12 @@ public class Parser {
         }
     }
 
-    public HashMap<String,HashSet<String>> summarize(String document){
+    public HashMap<String,HashSet<String>> summarize(String[] sentences){
 
         HashMap<String,HashSet<String>> sentenceTerms = new HashMap<>(); //<sentence, set of parsed terms>
         termsTF.clear();
         termsForQuery.clear();
 
-        String[] sentences = document.split("\\.");
         for(String s : sentences){
             split(s);
             sentenceTerms.put(s,new HashSet<>(termsForQuery));
