@@ -331,14 +331,27 @@ public class Controller {
     public void saveResults(){
         try {
             PrintWriter writer = new PrintWriter(saveResultsPath+"/queryResults.txt","UTF-8");
-            for(String s : searcher.queryNumbers){
-                for(String docid : results.get(s)){
-                    writer.println(s+" 0 "+docid+" 1 42.38 mt");
+            if(searcher.queryNumbers == null){
+                for(String docid : results.get("0")){
+                    writer.println("0"+" 0 "+docid+" 1 42.38 mt");
                     writer.flush();
+                }
+            }
+            else {
+                for (String s : searcher.queryNumbers) {
+                    for (String docid : results.get(s)) {
+                        writer.println(s + " 0 " + docid + " 1 42.38 mt");
+                        writer.flush();
+                    }
                 }
             }
             writer.close();
         }catch (Exception e){}
+
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setContentText("Results has been save!");
+        alert.show();
     }
 
     /**
