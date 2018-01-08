@@ -19,7 +19,7 @@ public class TermInDictionairy implements Comparable, Serializable{
 //if there is no cache record for the term, the cache record will be null and the pointer to posting will be >0
 
     public TermInDictionairy(String term) {
-        this.totalOccurencesInCorpus = 1;
+        this.totalOccurencesInCorpus = 0;
         this.pointerToPosting = 0;
         pointerToTermInCache =null;
         numberOfDocumentsOccuresIn=0;
@@ -75,8 +75,8 @@ public class TermInDictionairy implements Comparable, Serializable{
     /**
      * updates the total number of this term in the corpus - adds 1 to the current value
      */
-    public void setTotalOccurencesInCorpus() {
-        this.totalOccurencesInCorpus++;
+    public void setTotalOccurencesInCorpus(int occurencesInCorpus) {
+        this.totalOccurencesInCorpus+=occurencesInCorpus;
     }
 
     /**

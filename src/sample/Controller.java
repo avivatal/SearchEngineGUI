@@ -48,18 +48,21 @@ public class Controller {
     public javafx.scene.control.Button resetall;
     public javafx.scene.control.CheckBox expandquery;
     public javafx.scene.control.CheckBox docidbox;
-
+    public javafx.scene.control.TextField saveResultstxt;
+    public javafx.scene.control.Button browseResults;
+    public javafx.scene.control.Button saveResults;
 
     String corpusPath;
     String destinationDirectory;
     private Stage stage;
     private ReadFile rf;
     String savePath;
-    String loadPath;
+    String loadPath; //cache, dictionary, corpus, stopwords, posting location
     String queryPath;
     String query;
-    //String docName;
+    String saveResultsPath;
     private Searcher searcher;
+    HashMap<String, List<String>> results;
 
     public Controller() {
         corpusPath=new String() ;
@@ -69,14 +72,7 @@ public class Controller {
         searcher=new Searcher();
         searcher.setParser(rf.ctrl.parser);
         searcher.setIndexer(rf.ctrl.indexer);
-       /* docName="</P><P> Los Angeles just may be the City of Angeles. The parents of the high school"+
-                "students are apt to believe it when they learn what the operations people of"+
-                "   Northwest Airlines at Los Angeles International Airport did last month. "+
-                "</P><P> When Northwest's Flight 190 was being buttoned down for its 12:30 p.m.  departure, nearly half of a group of 40 Japanese high school students were still mired in U.S. Customs following their long flight from Japan. </P> <P>"+
-                "Northwest put compassion over schedule and waited more than an hour until the final one of the group, none of whom could speak English, was on board. They"+
-                " were, in fact, bound for the Puget Sound area for a three-week intensive"+
-                " English language course preparatory to going on to Phoenix and a yearlong"+
-                " exchange program. "+ "</P> <P> But one of the flight attendants said,";*/
+        results = new HashMap<>();
     }
 
     /**
@@ -167,29 +163,38 @@ public class Controller {
      * get query input from user
      */
     public void getQuery(){
-        corpusPath="C:/Users/avevanes/Downloads/corpus";
-        destinationDirectory="C:/Users/avevanes/Downloads";
+        results.clear();
+       // destinationDirectory="C:/Users/avevanes/Downloads";
+        long startTime=System.currentTimeMillis();
         rf.ctrl.setWithStemming(stembox.isSelected());
-        rf.ctrl.setPaths(corpusPath+"/stop_words.txt",destinationDirectory);
+        rf.ctrl.setPaths(loadPath+"/stop_words.txt",null);  //
+        searcher.setLoadPath(loadPath);
         searcher.parser.setStopwords(rf.ctrl.getStopwords());
         searcher.parser.setIsQuery(true);
 
         try {
-            ObjectInputStream docWeight = new ObjectInputStream(new FileInputStream(destinationDirectory+"/"+rf.ctrl.directory+"/docWeightsWithStem.ser"));
+            ObjectInputStream docWeight;
+            ObjectInputStream docLength;
+            if(stembox.isSelected()) {
+                docWeight = new ObjectInputStream(new FileInputStream(loadPath + "/" + rf.ctrl.directory + "/docWeightsWithStem.ser"));
+                docLength = new ObjectInputStream(new FileInputStream(loadPath+"/"+rf.ctrl.directory+"/docLengthWithStem.ser"));
+            }
+            else{
+                docWeight = new ObjectInputStream(new FileInputStream(loadPath + "/" + rf.ctrl.directory + "/docWeightsNoStem.ser"));
+                docLength = new ObjectInputStream(new FileInputStream(loadPath+"/"+rf.ctrl.directory+"/docLengthNoStem.ser"));
+            }
             rf.ctrl.indexer.setDocWeights((HashMap<String,Double>)docWeight.readObject());
             docWeight.close();
-
-            ObjectInputStream docLength = new ObjectInputStream(new FileInputStream(destinationDirectory+"/"+rf.ctrl.directory+"/docLengthWithStem.ser"));
             rf.ctrl.indexer.setDocLengths((HashMap<String,Integer>)docLength.readObject());
-            docWeight.close();
+            docLength.close();
         }
         catch (Exception e){}
 
 
 
         List<String> list=null;
-        long startTime=System.currentTimeMillis();
         if(singlequery.getText() != ""){
+            //if docID to summarize
             if(docidbox.isSelected())
             {
                 Summarizer summary=new Summarizer();
@@ -222,11 +227,11 @@ public class Controller {
 
             }
             else
+                //if query
                 {
-                long totalTime=System.currentTimeMillis()-startTime;
                 query = singlequery.getText().trim();
                 list=searcher.getRelevantDocs(query);
-
+                long totalTime=System.currentTimeMillis()-startTime;
                 ObservableList<String> items= FXCollections.observableArrayList();
                 items.add("The number of documents that have been retrieved is: "+list.size());
                 items.add("The total runtime is: "+totalTime);
@@ -234,6 +239,7 @@ public class Controller {
                 for(String s:list){
                     items.add(s);
                 }
+                results.put("0",new ArrayList<>(list));
 
                 Stage newstage = new Stage();
                 newstage.setTitle("Results");
@@ -252,56 +258,42 @@ public class Controller {
                 newstage.showAndWait();
             }
         }
-
-
-
     }
 
     public void getQueryPath()
     {
+        results.clear();
+        long startTime=System.currentTimeMillis();
         rf.ctrl.setWithStemming(stembox.isSelected());
-        rf.ctrl.setPaths("C:/Users/avevanes/Downloads/corpus/stop_words.txt","C:/Users/avevanes/Downloads");
+        rf.ctrl.setPaths(loadPath+"/stop_words.txt",null);
+        searcher.setLoadPath(loadPath);
         searcher.parser.setStopwords(rf.ctrl.getStopwords());
         searcher.parser.setIsQuery(true);
-        destinationDirectory="C:/Users/avevanes/Downloads";
+        //destinationDirectory="C:/Users/avevanes/Downloads";
         try {
-            ObjectInputStream docWeight = new ObjectInputStream(new FileInputStream(destinationDirectory+"/"+rf.ctrl.directory+"/docWeightsWithStem.ser"));
+            ObjectInputStream docWeight;
+            ObjectInputStream docLength;
+            if(stembox.isSelected()) {
+                docWeight = new ObjectInputStream(new FileInputStream(loadPath + "/" + rf.ctrl.directory + "/docWeightsWithStem.ser"));
+                docLength = new ObjectInputStream(new FileInputStream(loadPath+"/"+rf.ctrl.directory+"/docLengthWithStem.ser"));
+            }
+            else{
+                docWeight = new ObjectInputStream(new FileInputStream(loadPath + "/" + rf.ctrl.directory + "/docWeightsNoStem.ser"));
+                docLength = new ObjectInputStream(new FileInputStream(loadPath+"/"+rf.ctrl.directory+"/docLengthNoStem.ser"));
+            }
             rf.ctrl.indexer.setDocWeights((HashMap<String,Double>)docWeight.readObject());
             docWeight.close();
-
-            ObjectInputStream docLength = new ObjectInputStream(new FileInputStream(destinationDirectory+"/"+rf.ctrl.directory+"/docLengthWithStem.ser"));
             rf.ctrl.indexer.setDocLengths((HashMap<String,Integer>)docLength.readObject());
-            docWeight.close();
+            docLength.close();
         }
         catch (Exception e){}
-        /////
 
-
-
-        long startTime=System.currentTimeMillis();
+        //not manually entered path, used browse button
         if(queryPath!=""){
             queryPath=browsequery.getText();
         }
 
-        StringBuilder result = new StringBuilder();
-        HashMap<String, List<String>> results = searcher.multipleQueries(queryPath);
-
-        int totalSize=0;
-
-        //write results to file - MOVE TO DIFFERENT FUNCTION, CHANGE WRITE PATH
-        try {
-
-            PrintWriter writer = new PrintWriter(destinationDirectory+"/queryResults.txt","UTF-8");
-            for(String s : searcher.queryNumbers){
-                for(String docid : results.get(s)){
-                    writer.println(s+" 0 "+docid+" 1 42.38 mt");
-                    writer.flush();
-                }
-            }
-            writer.close();
-
-
-        }catch (Exception e){}
+        results = searcher.multipleQueries(queryPath);
 
         long totalTime=System.currentTimeMillis()-startTime;
 
@@ -311,8 +303,7 @@ public class Controller {
         for(String s   : results.keySet()){
             items.add("Query Number: "+s);
             items.add("The number of documents that have been retrieved is: "+results.get(s).size());
-            items.add("The document IDs retrieved are: "+result.toString());
-            items.add("Results: ");
+            items.add("The document IDs retrieved are:");
 
             for(String doc : results.get(s)){
                 items.add(doc);
@@ -336,6 +327,35 @@ public class Controller {
         newstage.showAndWait();
 
     }
+
+    public void saveResults(){
+        try {
+            PrintWriter writer = new PrintWriter(saveResultsPath+"/queryResults.txt","UTF-8");
+            for(String s : searcher.queryNumbers){
+                for(String docid : results.get(s)){
+                    writer.println(s+" 0 "+docid+" 1 42.38 mt");
+                    writer.flush();
+                }
+            }
+            writer.close();
+        }catch (Exception e){}
+    }
+
+    /**
+     * opens a directory chooser to select the directory to save the posting files in
+     */
+    public void browseSaveResults(){
+        try {
+            DirectoryChooser chooser = new DirectoryChooser();
+            chooser.setTitle("Browse");
+            File selectedDirectory = chooser.showDialog(stage);
+            saveResultsPath = (selectedDirectory.toString());
+            saveResultstxt.setText(selectedDirectory.toString()); //change to textbox
+        }catch (Exception e){}
+
+    }
+
+
     /**
      * opens a directory chooser to select the directory to save the posting files in
      */

@@ -115,6 +115,9 @@ public class Parser {
                 maxTF = new TermInDoc("null", 0, -1);
                 docName=extractName(doc);
                 documentProperties.put(docName,docNumber+"");
+                if(docName.equals("LA111290-0139")){
+                    int i=0;
+                }
                 split(extractText(doc));
 
                 docLenghts.put(docName,numberOfTermsInDoc);

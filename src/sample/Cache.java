@@ -26,7 +26,7 @@ public class Cache implements Serializable {
         list.addAll(dictionary.values());
         Collections.sort(list);
         int listlen=list.size();
-        list = list.subList(listlen-maxCacheSize,listlen);
+        list = list.subList(Math.max(listlen,listlen-maxCacheSize),listlen);
         queue.addAll(list);
 
     }

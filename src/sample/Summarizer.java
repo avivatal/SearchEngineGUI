@@ -6,7 +6,7 @@ import java.util.*;
 
 public class Summarizer {
 
-    String docname;
+   // String docname;
     Parser parser;
     String corpusPath;
     String directory;

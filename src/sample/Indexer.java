@@ -1,8 +1,5 @@
 package sample;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,7 +17,7 @@ public class Indexer {
 
     HashMap<String, Double> docWeights;
 
-   HashMap<String, Integer> docLengths;
+    HashMap<String, Integer> docLengths;
     int numOfDocsInCorpus;
 
     public Indexer() {
@@ -84,42 +81,43 @@ public class Indexer {
             //if word doesnt appear in dictionairy - add it
             if(!dictionairy.containsKey(entry.getKey())){
                 dictionairy.put(entry.getKey(),new TermInDictionairy(entry.getKey()));
-                dictionairy.get(entry.getKey()).setNumberOfDocumentsOccuresIn(entry.getValue().size());
             }
-            //word is in dictionairy - update totalOccurencesInCorpus
-            else{
-                dictionairy.get(entry.getKey()).setTotalOccurencesInCorpus();
-                dictionairy.get(entry.getKey()).setNumberOfDocumentsOccuresIn(entry.getValue().size());
+            dictionairy.get(entry.getKey()).setNumberOfDocumentsOccuresIn(entry.getValue().size());
+            int sumTF=0;
+            for(TermInDoc tid : entry.getValue().values()){
+                sumTF += tid.getTf();
             }
+            dictionairy.get(entry.getKey()).setTotalOccurencesInCorpus(sumTF);
         }
-        //create temp posting file
 
-        //sort stemmedTerms map
-        SortedSet<String> sortedKeys = new TreeSet<String>(stemmedTerms.keySet());
+    //create temp posting file
+
+    //sort stemmedTerms map
+    SortedSet<String> sortedKeys = new TreeSet<String>(stemmedTerms.keySet());
 
         try {
-            //create file for temp posting file
-            numberOfTempPostingFiles++;
-            PrintWriter writer = new PrintWriter(destinationDirectory+"/"+directory+"/"+numberOfTempPostingFiles+".txt" , "UTF-8");
+        //create file for temp posting file
+        numberOfTempPostingFiles++;
+        PrintWriter writer = new PrintWriter(destinationDirectory+"/"+directory+"/"+numberOfTempPostingFiles+".txt" , "UTF-8");
 
 
-            //write each posting entry to file
-            for (String key : sortedKeys) {
-                //key = term, value = <docID, TermInDoc>
-                HashMap<String, TermInDoc> value = stemmedTerms.get(key);
-                //string to write to file
-                StringBuilder line = new StringBuilder();
-                line.append(key+": ");
-                for (TermInDoc termInDoc : value.values()) {
-                    line.append(" "+termInDoc.toString());
-                }
-                writer.println(line.toString());
-                writer.flush();
+        //write each posting entry to file
+        for (String key : sortedKeys) {
+            //key = term, value = <docID, TermInDoc>
+            HashMap<String, TermInDoc> value = stemmedTerms.get(key);
+            //string to write to file
+            StringBuilder line = new StringBuilder();
+            line.append(key+": ");
+            for (TermInDoc termInDoc : value.values()) {
+                line.append(" "+termInDoc.toString());
             }
-            writer.close();
+            writer.println(line.toString());
+            writer.flush();
         }
-        catch (Exception e){ e.printStackTrace();}
+        writer.close();
     }
+        catch (Exception e){ e.printStackTrace();}
+}
 
     /**
      * merges 2 posting records of same terms into a single posting record
@@ -235,7 +233,7 @@ public class Indexer {
 
                 while(line2!=null){
                     writer.println(line2);
-                    line2=reader1.readLine();
+                    line2=reader2.readLine();
                 }
 
                 //delete old files and close readers and writers
@@ -325,7 +323,7 @@ public class Indexer {
                 cache.getLine(line2,lineCounter);
                 calcDocWeight(line2);
                 updatePointerToPosting(line2.substring(0, line2.indexOf(":")), lineCounter++);
-                line2=reader1.readLine();
+                line2=reader2.readLine();
             }
             writer.flush();
 
@@ -377,7 +375,7 @@ public class Indexer {
                     cache.getLine(line2,lineCounter);
                     calcDocWeight(line2);
                     updatePointerToPosting(line2.substring(0, line2.indexOf(":")), lineCounter++);
-                    line2=reader1.readLine();
+                    line2=reader2.readLine();
                 }
                 letterWriter.flush();
                 currentChar++;
@@ -464,6 +462,22 @@ public class Indexer {
             }
 
         }
+    }
+
+    public void calcAvgLength(){
+        double sum=0;
+        for(int length : docLengths.values()){
+            sum += length;
+        }
+        sum= sum/docLengths.size();
+
+        try {
+            PrintWriter avglenWriter = new PrintWriter(destinationDirectory + "/" + directory + "/avgDocLengthWithStem.txt", "UTF-8");
+            avglenWriter.println(sum);
+            avglenWriter.flush();
+            avglenWriter.close();
+        }catch(Exception e){}
+
     }
 
 }
