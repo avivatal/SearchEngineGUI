@@ -20,12 +20,15 @@
       <ColumnConstraints hgrow="SOMETIMES" maxWidth="451.0" minWidth="10.0" prefWidth="116.0" />
   </columnConstraints>
   <rowConstraints>
-      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-      <RowConstraints maxHeight="111.0" minHeight="10.0" prefHeight="111.0" vgrow="SOMETIMES" />
-      <RowConstraints maxHeight="119.0" minHeight="10.0" prefHeight="115.0" vgrow="SOMETIMES" />
-    <RowConstraints maxHeight="125.0" minHeight="10.0" prefHeight="42.0" vgrow="SOMETIMES" />
-    <RowConstraints maxHeight="173.0" minHeight="10.0" prefHeight="66.0" vgrow="SOMETIMES" />
-      <RowConstraints maxHeight="173.0" minHeight="10.0" prefHeight="115.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="41.0" minHeight="10.0" prefHeight="41.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="133.0" minHeight="10.0" prefHeight="94.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="119.0" minHeight="10.0" prefHeight="55.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="119.0" minHeight="10.0" prefHeight="83.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="125.0" minHeight="10.0" prefHeight="37.0" vgrow="SOMETIMES" />
+    <RowConstraints maxHeight="125.0" minHeight="0.0" prefHeight="0.0" vgrow="SOMETIMES" />
+    <RowConstraints maxHeight="173.0" minHeight="10.0" prefHeight="105.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="173.0" minHeight="10.0" prefHeight="65.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="173.0" minHeight="10.0" prefHeight="51.0" vgrow="SOMETIMES" />
     <RowConstraints maxHeight="224.0" minHeight="10.0" prefHeight="153.0" vgrow="SOMETIMES" />
   </rowConstraints>
    <children>
@@ -84,7 +87,7 @@
             <Font name="System Bold" size="18.0" />
          </font>
       </Text>
-      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="3" GridPane.rowIndex="2">
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="3" GridPane.rowIndex="3">
          <children>
             <Button fx:id="load" mnemonicParsing="false" onAction="#load" text="Load">
                <VBox.margin>
@@ -98,7 +101,7 @@
             </Button>
          </children>
       </VBox>
-      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
          <children>
             <TextField fx:id="loadtxt" prefHeight="26.0" prefWidth="305.0">
                <VBox.margin>
@@ -112,7 +115,7 @@
             </TextField>
          </children>
       </VBox>
-      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="2" GridPane.rowIndex="2">
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="2" GridPane.rowIndex="3">
          <children>
             <Button fx:id="browseload" mnemonicParsing="false" onAction="#browseload" text="Browse">
                <VBox.margin>
@@ -126,7 +129,7 @@
             </Button>
          </children>
       </VBox>
-      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.rowIndex="2">
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.rowIndex="3">
          <children>
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Enter Path to Load Cache &amp; Dictionairy from:" wrappingWidth="237.310546875">
                <VBox.margin>
@@ -140,7 +143,7 @@
             </Text>
          </children>
       </VBox>
-      <HBox prefHeight="100.0" prefWidth="200.0" GridPane.rowIndex="6">
+      <HBox prefHeight="100.0" prefWidth="200.0" GridPane.rowIndex="9">
          <children>
             <Button fx:id="cacheB" mnemonicParsing="false" onAction="#displayCache" prefHeight="25.0" prefWidth="112.0" text="Display Cache">
                <HBox.margin>
@@ -164,7 +167,7 @@
             <Button fx:id="btn_reset" mnemonicParsing="false" onAction="#reset" prefHeight="32.0" prefWidth="86.0" text="Reset Index" />
          </children>
       </VBox>
-      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.rowIndex="3">
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.rowIndex="5">
          <children>
             <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Enter Path to Load Queries File from:" wrappingWidth="237.310546875">
                <VBox.margin>
@@ -173,7 +176,7 @@
             </Text>
          </children>
       </VBox>
-      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" GridPane.rowIndex="5">
          <children>
             <TextField fx:id="browsequery" prefHeight="26.0" prefWidth="170.0">
                <VBox.margin>
@@ -182,7 +185,7 @@
             </TextField>
          </children>
       </VBox>
-      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="2" GridPane.rowIndex="3">
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="2" GridPane.rowIndex="5">
          <children>
             <Button fx:id="browsequerybutton" mnemonicParsing="false" onAction="#browseQueries" text="Browse">
                <VBox.margin>
@@ -191,7 +194,7 @@
             </Button>
          </children>
       </VBox>
-      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="3" GridPane.rowIndex="3">
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="3" GridPane.rowIndex="5">
          <children>
             <Button fx:id="executequeries" mnemonicParsing="false" onAction="#getQueryPath" text="Execute Queries">
                <VBox.margin>
@@ -200,47 +203,69 @@
             </Button>
          </children>
       </VBox>
-      <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Enter Single Query or Document ID:" wrappingWidth="237.310546875" GridPane.rowIndex="4">
+      <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Enter Single Query or Document ID:" wrappingWidth="237.310546875" GridPane.rowIndex="6">
          <GridPane.margin>
             <Insets left="10.0" />
          </GridPane.margin>
       </Text>
-      <TextField fx:id="singlequery" prefHeight="26.0" prefWidth="170.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-      <Button fx:id="executequery" mnemonicParsing="false" onAction="#getQuery" text="Execute Query" GridPane.columnIndex="3" GridPane.rowIndex="4" />
-      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="2" GridPane.rowIndex="4">
+      <TextField fx:id="singlequery" prefHeight="26.0" prefWidth="170.0" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+      <Button fx:id="executequery" mnemonicParsing="false" onAction="#getQuery" text="Execute Query" GridPane.columnIndex="3" GridPane.rowIndex="6" />
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="2" GridPane.rowIndex="6">
          <children>
-            <CheckBox fx:id="expandquery" mnemonicParsing="false" prefHeight="18.0" prefWidth="121.0" selected="true" text="Expand Query">
-               <padding>
-                  <Insets left="10.0" top="20.0" />
-               </padding>
-            </CheckBox>
-            <CheckBox fx:id="docidbox" mnemonicParsing="false" prefHeight="27.0" prefWidth="153.0" selected="true" text="Entered Document ID">
+            <CheckBox fx:id="docidbox" mnemonicParsing="false" prefHeight="27.0" prefWidth="153.0" selected="false" text="Entered Document ID">
                <padding>
                   <Insets left="10.0" />
                </padding>
+               <VBox.margin>
+                  <Insets top="37.0" />
+               </VBox.margin>
             </CheckBox>
          </children>
       </VBox>
-      <Button fx:id="resetall" mnemonicParsing="false" onAction="#displayCache" prefHeight="25.0" prefWidth="112.0" text="Reset All" GridPane.columnIndex="1" GridPane.rowIndex="6">
+      <Button fx:id="resetall" mnemonicParsing="false" onAction="#resetAll" prefHeight="25.0" prefWidth="112.0" text="Reset All" GridPane.columnIndex="1" GridPane.rowIndex="9">
          <GridPane.margin>
             <Insets bottom="93.0" top="69.0" />
          </GridPane.margin>
       </Button>
-      <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Enter Single Query or Document ID:" wrappingWidth="237.310546875" GridPane.rowIndex="5">
+      <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Enter Path to Save Query Results:" wrappingWidth="237.310546875" GridPane.rowIndex="8">
          <GridPane.margin>
             <Insets left="10.0" />
          </GridPane.margin>
       </Text>
-      <TextField fx:id="saveResultstxt" prefHeight="26.0" prefWidth="170.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-      <Button fx:id="browseResults" mnemonicParsing="false" onAction="#browseSaveResults" text="Browse" GridPane.columnIndex="2" GridPane.rowIndex="5">
+      <TextField fx:id="saveResultstxt" prefHeight="26.0" prefWidth="170.0" GridPane.columnIndex="1" GridPane.rowIndex="8" />
+      <Button fx:id="browseResults" mnemonicParsing="false" onAction="#browseSaveResults" text="Browse" GridPane.columnIndex="2" GridPane.rowIndex="8">
          <GridPane.margin>
             <Insets left="10.0" />
          </GridPane.margin>
       </Button>
-      <Button fx:id="saveResults" mnemonicParsing="false" onAction="#saveResults" text="Save" GridPane.columnIndex="3" GridPane.rowIndex="5">
+      <Button fx:id="saveResults" mnemonicParsing="false" onAction="#saveResults" text="Save" GridPane.columnIndex="3" GridPane.rowIndex="8">
          <GridPane.margin>
             <Insets left="10.0" />
          </GridPane.margin>
       </Button>
+      <Text fill="#2b12d3" strokeType="OUTSIDE" strokeWidth="0.0" text="Load/Save Dictionary &amp; Cache" wrappingWidth="301.017578125" GridPane.rowIndex="2">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font>
+         <GridPane.margin>
+            <Insets left="20.0" />
+         </GridPane.margin>
+      </Text>
+      <Text fill="#2b12d3" strokeType="OUTSIDE" strokeWidth="0.0" text="Enter Query or Document ID" wrappingWidth="301.017578125" GridPane.rowIndex="4">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font>
+         <GridPane.margin>
+            <Insets left="20.0" />
+         </GridPane.margin>
+      </Text>
+      <Text fill="#2b12d3" strokeType="OUTSIDE" strokeWidth="0.0" text="Save Query Results" wrappingWidth="301.017578125" GridPane.rowIndex="7">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font>
+         <GridPane.margin>
+            <Insets left="20.0" />
+         </GridPane.margin>
+      </Text>
    </children>
 </GridPane>

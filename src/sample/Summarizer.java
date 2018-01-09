@@ -8,7 +8,7 @@ public class Summarizer {
 
    // String docname;
     Parser parser;
-    String corpusPath;
+    String loadPath;
     String directory;
 
     public Summarizer(){
@@ -18,7 +18,7 @@ public class Summarizer {
 
         ArrayList<String> newArrayList=null;
         try {
-            String docpath = corpusPath + "/" + directory + "/documents.txt";
+            String docpath = loadPath + "/" + directory + "/documents.txt";
             BufferedReader br = new BufferedReader(new FileReader(docpath));
             String aux = "";
             while ((aux = br.readLine()) != null) {
@@ -30,7 +30,7 @@ public class Summarizer {
 
             String[] docProperties = aux.split("\\, ");
 
-            String path = corpusPath + "/corpus/"  + docProperties[3]+"/"+docProperties[3];
+            String path = loadPath + "/corpus/"  + docProperties[3]+"/"+docProperties[3];
             BufferedReader docReader = new BufferedReader(new FileReader(path));
             StringBuilder builder = new StringBuilder();
             String filetxt = "";
@@ -72,16 +72,28 @@ public class Summarizer {
 
         parser.setDocSummary(true);
         parser.setIsQuery(true);
-        String[] sentences = document.split("\\.");
+        String[] sentences = document.split("\\. ");
+        //check for sentences that shouldn't be splited
+
+
+        for(int i=0; i<sentences.length; i++){
+            String two = sentences[i].substring(sentences[i].length()-2);
+            String three = sentences[i].substring(sentences[i].length()-3);
+            if(two.equals("Mr") || two.equals("Ms") || two.equals("Lt") || two.equals("St") || three.equals("a.m") || three.equals("p.m") || three.equals("U.S") || three.equals("Mrs")){
+                sentences[i+1] = sentences[i]+sentences[i+1];
+            }
+        }
+
 
         HashMap<String, HashSet<String>> sentenceTerms = parser.summarize(sentences);
         HashMap<String, Double> sentenceTF = new HashMap<>();
         HashMap<String, Integer> termsTF = parser.getTermsTF();
 
+
+
         for(String sntnce : sentenceTerms.keySet())
         {
             sentenceTF.put(sntnce,0.0);
-            int totalSentenceTF=0;
             for(String term : sentenceTerms.get(sntnce)){
                 double tf;
                 boolean isNumber;
@@ -123,7 +135,7 @@ public class Summarizer {
         ArrayList<String> result = new ArrayList<>();
         for(int i=0; i<sentences.length; i++){
             if(list.contains(sentences[i])){
-                result.add("Score: "+list.indexOf(sentences[i])+"\n "+sentences[i]);
+                result.add("Score: "+(list.indexOf(sentences[i])+1)+"\n "+sentences[i]);
             }
         }
         return result;
@@ -145,8 +157,8 @@ public class Summarizer {
         return result;
     }
 
-    public void setCorpusPath(String path){
-        corpusPath=path;
+    public void setLoadPath(String path){
+        loadPath=path;
     }
 
     public void setWithStemming(boolean b){

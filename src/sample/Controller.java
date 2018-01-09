@@ -199,7 +199,7 @@ public class Controller {
             {
                 Summarizer summary=new Summarizer();
                 summary.parser.setStopwords(rf.ctrl.getStopwords());
-                summary.setCorpusPath(corpusPath);
+                summary.setLoadPath(loadPath);
                 summary.setWithStemming(stembox.isSelected());
                 ArrayList<String> result = summary.readFile(singlequery.getText().trim());
 
@@ -715,6 +715,46 @@ public class Controller {
 
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setContentText("Reset has Completed");
+            alert.show();
+            btn_start.setDisable(false);
+            btn_reset.setDisable(false);
+            browse1.setDisable(false);
+            browse2.setDisable(false);
+            cacheB.setDisable(false);
+            dictB.setDisable(false);
+        }
+        else{
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setContentText("Unable to Reset");
+            alert.show();
+        }
+
+
+    }
+
+    public void resetAll(){
+
+        if(saveResultsPath!=null) {
+            btn_start.setDisable(true);
+            btn_reset.setDisable(true);
+            browse1.setDisable(true);
+            browse2.setDisable(true);
+            cacheB.setDisable(true);
+            dictB.setDisable(true);
+
+            //delete the results file
+            File results = new File(saveResultsPath + "/queryResults.txt");
+            results.delete();
+
+            //delete from RAM
+            rf=new ReadFile();
+            searcher = new Searcher();
+            this.results = new HashMap<>();
+            loadPath="";
+            saveResultsPath="";
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setContentText("Reset has been Completed");
             alert.show();
             btn_start.setDisable(false);
             btn_reset.setDisable(false);
