@@ -115,9 +115,7 @@ public class Parser {
                 maxTF = new TermInDoc("null", 0, -1);
                 docName=extractName(doc);
                 documentProperties.put(docName,docNumber+"");
-                if(docName.equals("LA111290-0139")){
-                    int i=0;
-                }
+
                 split(extractText(doc));
 
                 docLenghts.put(docName,numberOfTermsInDoc);
@@ -171,7 +169,7 @@ public class Parser {
             //avoid parsing empty strings
             splited[j].trim();
             splited[j] = cleanFromStart(splited[j]);
-            if (!(splited[j].equals("") || splited[j].equals(" ")||splited[j].equals("P")) && splited[j].length() > 0) {
+            if (!(splited[j].equals("") || splited[j].equals(" ")||splited[j].equals("P") || splited[j].equals("CELLRULE") || splited[j].equals("TABLECELL") || splited[j].equals("ROWRULE")) && splited[j].length() > 0) {
 
 
                 int splitedj = splited[j].length();

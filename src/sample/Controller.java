@@ -20,6 +20,7 @@ import java.util.*;
 import javafx.scene.control.Alert;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.xml.crypto.dsig.keyinfo.KeyValue;
 //import jdk.nashorn.internal.ir.debug.ObjectSizeCalculator;
 
@@ -163,6 +164,8 @@ public class Controller {
      * get query input from user
      */
     public void getQuery(){
+
+
         results.clear();
        // destinationDirectory="C:/Users/avevanes/Downloads";
         long startTime=System.currentTimeMillis();
@@ -187,13 +190,15 @@ public class Controller {
             docWeight.close();
             rf.ctrl.indexer.setDocLengths((HashMap<String,Integer>)docLength.readObject());
             docLength.close();
+
+            rf.ctrl.indexer.calcAvgLength();
         }
         catch (Exception e){}
 
 
 
         List<String> list=null;
-        if(singlequery.getText() != ""){
+        if(!singlequery.getText().equals("")){
             //if docID to summarize
             if(docidbox.isSelected())
             {
@@ -258,100 +263,124 @@ public class Controller {
                 newstage.showAndWait();
             }
         }
+        else{
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setContentText("Enter a query or a document ID");
+            alert.show();
+        }
     }
 
     public void getQueryPath()
     {
-        results.clear();
-        long startTime=System.currentTimeMillis();
-        rf.ctrl.setWithStemming(stembox.isSelected());
-        rf.ctrl.setPaths(loadPath+"/stop_words.txt",null);
-        searcher.setLoadPath(loadPath);
-        searcher.parser.setStopwords(rf.ctrl.getStopwords());
-        searcher.parser.setIsQuery(true);
-        //destinationDirectory="C:/Users/avevanes/Downloads";
-        try {
-            ObjectInputStream docWeight;
-            ObjectInputStream docLength;
-            if(stembox.isSelected()) {
-                docWeight = new ObjectInputStream(new FileInputStream(loadPath + "/" + rf.ctrl.directory + "/docWeightsWithStem.ser"));
-                docLength = new ObjectInputStream(new FileInputStream(loadPath+"/"+rf.ctrl.directory+"/docLengthWithStem.ser"));
-            }
-            else{
-                docWeight = new ObjectInputStream(new FileInputStream(loadPath + "/" + rf.ctrl.directory + "/docWeightsNoStem.ser"));
-                docLength = new ObjectInputStream(new FileInputStream(loadPath+"/"+rf.ctrl.directory+"/docLengthNoStem.ser"));
-            }
-            rf.ctrl.indexer.setDocWeights((HashMap<String,Double>)docWeight.readObject());
-            docWeight.close();
-            rf.ctrl.indexer.setDocLengths((HashMap<String,Integer>)docLength.readObject());
-            docLength.close();
+        if(loadPath==null || loadPath.equals("")){
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setContentText("Enter a path to load query file from!");
+            alert.show();
         }
-        catch (Exception e){}
+        else {
+            try {
+                results.clear();
+                long startTime = System.currentTimeMillis();
+                rf.ctrl.setWithStemming(stembox.isSelected());
+                rf.ctrl.setPaths(loadPath + "/stop_words.txt", null);
+                searcher.setLoadPath(loadPath);
+                searcher.parser.setStopwords(rf.ctrl.getStopwords());
+                searcher.parser.setIsQuery(true);
+                //destinationDirectory="C:/Users/avevanes/Downloads";
+                try {
+                    ObjectInputStream docWeight;
+                    ObjectInputStream docLength;
+                    if (stembox.isSelected()) {
+                        docWeight = new ObjectInputStream(new FileInputStream(loadPath + "/" + rf.ctrl.directory + "/docWeightsWithStem.ser"));
+                        docLength = new ObjectInputStream(new FileInputStream(loadPath + "/" + rf.ctrl.directory + "/docLengthWithStem.ser"));
+                    } else {
+                        docWeight = new ObjectInputStream(new FileInputStream(loadPath + "/" + rf.ctrl.directory + "/docWeightsNoStem.ser"));
+                        docLength = new ObjectInputStream(new FileInputStream(loadPath + "/" + rf.ctrl.directory + "/docLengthNoStem.ser"));
+                    }
+                    rf.ctrl.indexer.setDocWeights((HashMap<String, Double>) docWeight.readObject());
+                    docWeight.close();
+                    rf.ctrl.indexer.setDocLengths((HashMap<String, Integer>) docLength.readObject());
+                    docLength.close();
+                    rf.ctrl.indexer.calcAvgLength();
+                } catch (Exception e) {
+                }
 
-        //not manually entered path, used browse button
-        if(queryPath!=""){
-            queryPath=browsequery.getText();
-        }
+                //not manually entered path, used browse button
+                if (queryPath != "") {
+                    queryPath = browsequery.getText();
+                }
 
-        results = searcher.multipleQueries(queryPath);
+                results = searcher.multipleQueries(queryPath);
 
-        long totalTime=System.currentTimeMillis()-startTime;
+                long totalTime = System.currentTimeMillis() - startTime;
 
-        ObservableList<String> items= FXCollections.observableArrayList();
-        items.add("The queries have been successfuly executed.");
-        items.add("The total runtime is: "+totalTime);
-        for(String s   : results.keySet()){
-            items.add("Query Number: "+s);
-            items.add("The number of documents that have been retrieved is: "+results.get(s).size());
-            items.add("The document IDs retrieved are:");
+                ObservableList<String> items = FXCollections.observableArrayList();
+                items.add("The queries have been successfuly executed.");
+                items.add("The total runtime is: " + totalTime);
+                for (String s : results.keySet()) {
+                    items.add("Query Number: " + s);
+                    items.add("The number of documents that have been retrieved is: " + results.get(s).size());
+                    items.add("The document IDs retrieved are:");
 
-            for(String doc : results.get(s)){
-                items.add(doc);
+                    for (String doc : results.get(s)) {
+                        items.add(doc);
+                    }
+                }
+
+                Stage newstage = new Stage();
+                newstage.setTitle("Results");
+                BorderPane pane = new BorderPane();
+                Scene scene = new Scene(pane);
+                newstage.setScene(scene);
+                ListView<String> listView = new ListView<>();
+                listView.setItems(items);
+                pane.setCenter(listView);
+                newstage.setAlwaysOnTop(true);
+                newstage.setOnCloseRequest(
+                        e -> {
+                            e.consume();
+                            newstage.close();
+                        });
+                newstage.showAndWait();
             }
+            catch(Exception e){
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setContentText("Please Enter a Valid Path!");
+                alert.show();}
         }
-
-        Stage newstage = new Stage();
-        newstage.setTitle("Results");
-        BorderPane pane = new BorderPane();
-        Scene scene = new Scene(pane);
-        newstage.setScene(scene);
-        ListView<String> listView = new ListView<>();
-        listView.setItems(items);
-        pane.setCenter(listView);
-        newstage.setAlwaysOnTop(true);
-        newstage.setOnCloseRequest(
-                e -> {
-                    e.consume();
-                    newstage.close();
-                });
-        newstage.showAndWait();
 
     }
 
-    public void saveResults(){
-        try {
-            PrintWriter writer = new PrintWriter(saveResultsPath+"/queryResults.txt","UTF-8");
-            if(searcher.queryNumbers == null){
-                for(String docid : results.get("0")){
-                    writer.println("0"+" 0 "+docid+" 1 42.38 mt");
-                    writer.flush();
-                }
-            }
-            else {
-                for (String s : searcher.queryNumbers) {
-                    for (String docid : results.get(s)) {
-                        writer.println(s + " 0 " + docid + " 1 42.38 mt");
+    public void saveResults() {
+        if (saveResultsPath != null && !saveResultsPath.equals("")) {
+            try {
+                PrintWriter writer = new PrintWriter(saveResultsPath + ".txt", "UTF-8");
+                if (searcher.queryNumbers == null) {
+                    for (String docid : results.get("0")) {
+                        writer.println("0" + " 0 " + docid + " 1 42.38 mt");
                         writer.flush();
                     }
+                } else {
+                    for (String s : searcher.queryNumbers) {
+                        for (String docid : results.get(s)) {
+                            writer.println(s + " 0 " + docid + " 1 42.38 mt");
+                            writer.flush();
+                        }
+                    }
                 }
+                writer.close();
+            } catch (Exception e) {
             }
-            writer.close();
-        }catch (Exception e){}
 
 
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setContentText("Results has been save!");
-        alert.show();
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setContentText("Results has been save!");
+            alert.show();
+        } else {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setContentText("Enter a path to save results");
+            alert.show();
+        }
     }
 
     /**
@@ -359,11 +388,15 @@ public class Controller {
      */
     public void browseSaveResults(){
         try {
-            DirectoryChooser chooser = new DirectoryChooser();
-            chooser.setTitle("Browse");
-            File selectedDirectory = chooser.showDialog(stage);
-            saveResultsPath = (selectedDirectory.toString());
-            saveResultstxt.setText(selectedDirectory.toString()); //change to textbox
+            JFileChooser chooser=new JFileChooser();
+            chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            FileNameExtensionFilter filter = new FileNameExtensionFilter("Text", "txt");
+            chooser.setFileFilter(filter);
+            chooser.showSaveDialog(null);
+
+            saveResultsPath=chooser.getSelectedFile().getAbsolutePath();
+            saveResultstxt.setText(saveResultsPath);
+
         }catch (Exception e){}
 
     }
@@ -570,7 +603,6 @@ public class Controller {
                     alert.show();
 
                 }catch (NullPointerException e){
-                    e.printStackTrace();
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setContentText("File Path Invalid");
                     alert.show();
@@ -743,7 +775,7 @@ public class Controller {
             dictB.setDisable(true);
 
             //delete the results file
-            File results = new File(saveResultsPath + "/queryResults.txt");
+            File results = new File(saveResultsPath + ".txt");
             results.delete();
 
             //delete from RAM
