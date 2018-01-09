@@ -472,7 +472,7 @@ public class Indexer {
         sum= sum/docLengths.size();
 
         try {
-            PrintWriter avglenWriter = new PrintWriter(destinationDirectory + "/" + directory + "/avgDocLengthWithStem.txt", "UTF-8");
+            PrintWriter avglenWriter = new PrintWriter(destinationDirectory + "/" + directory + "/avgDocLengthNoStem.txt", "UTF-8");
             avglenWriter.println(sum);
             avglenWriter.flush();
             avglenWriter.close();

@@ -301,6 +301,7 @@ public class Controller {
                     docWeight.close();
                     rf.ctrl.indexer.setDocLengths((HashMap<String, Integer>) docLength.readObject());
                     docLength.close();
+                    rf.ctrl.indexer.destinationDirectory=loadPath;
                     rf.ctrl.indexer.calcAvgLength();
                 } catch (Exception e) {
                 }

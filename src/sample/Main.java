@@ -15,8 +15,11 @@ public class Main extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("sample.fxml"));
         fxmlLoader.setController(new Controller());
         Parent root = fxmlLoader.load();
+        root.setId("pane");
         primaryStage.setTitle("Search Engine");
-        primaryStage.setScene(new Scene(root, 800, 700));
+        Scene scene = new Scene(root, 800, 700);
+        scene.getStylesheets().addAll(this.getClass().getResource("style.css").toExternalForm());
+        primaryStage.setScene(scene);
 
         Controller ctrl = new Controller();
         ctrl.setStage(primaryStage);

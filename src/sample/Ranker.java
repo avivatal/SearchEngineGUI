@@ -89,7 +89,7 @@ public class Ranker {
 
                             //get avg doc length
                             if(avgDocLen==-1.0){
-                                String avgLenPath = loadPath+"/"+indexer.directory+"/avgDocLengthWithStem.txt";
+                                String avgLenPath = loadPath+"/"+indexer.directory+"/avgDocLength.txt";
                                 BufferedReader br = new BufferedReader(new FileReader(avgLenPath));
                                 String avgLen = br.readLine();
                                 avgDocLen = Double.parseDouble(avgLen);
