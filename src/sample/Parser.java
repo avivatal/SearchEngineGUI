@@ -57,16 +57,29 @@ public class Parser {
         termsTF = new HashMap<>();
     }
 
+    /**
+     * sets whether parsing a query or not
+     * @param b true if parsing a query
+     */
     public void setIsQuery(boolean b){
         isQuery=b;
         if(b){
             termsForQuery=new HashSet<>();
         }
     }
+
+    /**
+     * sets the member holding the stop words
+     * @param stopwords map of stopwords
+     */
     public void setStopwords(HashMap<String, String> stopwords) {
         this.stopwords = stopwords;
     }
 
+    /**
+     * sets whether is summarizing a document
+     * @param docSummary
+     */
     public void setDocSummary(boolean docSummary) {
         this.docSummary = docSummary;
     }
@@ -83,6 +96,10 @@ public class Parser {
         }catch(Exception e){}
     }
 
+    /**
+     * gets the member holding the documnet lengths
+     * @return map of docid and its length
+     */
     public HashMap<String, Integer> getDocLenghts() {
         return docLenghts;
     }
@@ -681,6 +698,11 @@ public class Parser {
         }
     }
 
+    /**
+     * for summarizing a documents txt - parsing each sentence and saving the terms that are in each sentence.
+     * @param sentences array of sentences in a document
+     * @return sentence and set of terms that the sentence contains
+     */
     public HashMap<String,HashSet<String>> summarize(String[] sentences){
 
         HashMap<String,HashSet<String>> sentenceTerms = new HashMap<>(); //<sentence, set of parsed terms>
@@ -697,10 +719,18 @@ public class Parser {
         return sentenceTerms;
     }
 
+    /**
+     * gets the member that holds the terms in a query
+     * @return set of terms in a query
+     */
     public HashSet<String> getTermsForQuery() {
         return termsForQuery;
     }
 
+    /**
+     * returns the query terms and tf
+     * @return map of terms in a query and their tf
+     */
     public HashMap<String, Integer> getTermsTF() {
         return termsTF;
     }

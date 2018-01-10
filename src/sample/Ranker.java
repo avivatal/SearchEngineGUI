@@ -15,7 +15,11 @@ public class Ranker {
     }
 
 
-
+    /**
+     * ranks documents according to their relevance to a query using cosine similarity, BM25 and the terms index in doc.
+     * @param parsedQuery terms in a query
+     * @return 50 most relevant docs
+     */
     public List<String> rank(HashSet<String> parsedQuery){
 
         List<String> result=null;
@@ -25,11 +29,12 @@ public class Ranker {
 
         for(String term : parsedQuery){
 
+        //get the posting record for each term in query
             if(indexer.getDictionairy().containsKey(term)){
                 TermInDictionairy tid = indexer.getDictionairy().get(term);
                 double idf = Math.log10(indexer.numOfDocsInCorpus/tid.getNumberOfDocumentsOccuresIn())/Math.log10(2);
 
-                String path= loadPath+"/"+indexer.directory+"/";
+                String path= loadPath+"/";
                 char firstLetter = term.substring(0,1).toCharArray()[0];
                 if(firstLetter<97|| firstLetter>122){
                     path+= "nonLetters.txt";
@@ -89,21 +94,17 @@ public class Ranker {
 
                             //get avg doc length
                             if(avgDocLen==-1.0){
-                                String avgLenPath = loadPath+"/"+indexer.directory+"/avgDocLength.txt";
+                                String avgLenPath = loadPath+"/avgDocLength.txt";
                                 BufferedReader br = new BufferedReader(new FileReader(avgLenPath));
                                 String avgLen = br.readLine();
                                 avgDocLen = Double.parseDouble(avgLen);
                             }
 
+                            //calculate BM25 for current terms and document
                             double lenNormal = docLength / avgDocLen;
                             double bm_mone = Double.parseDouble(tf.toString()) * (k+1);
                             double bm_mechane = Double.parseDouble(tf.toString()) + k*(1-b+b*lenNormal);
                             bm25= bmidf * (bm_mone / bm_mechane);
-
-
-                            double tfAndIndex = docLength - Double.parseDouble(index.toString());
-                            tfAndIndex = tfAndIndex / docLength;
-                            tfAndIndex *= Double.parseDouble(tf.toString());
 
                             if (bm25InDocs.containsKey(docID.toString())) {
                                 double currentWeight = bm25InDocs.get(docID.toString());
@@ -113,6 +114,11 @@ public class Ranker {
                                 bm25InDocs.put(docID.toString(), bm25);
                             }
 
+                            //calculate the ((doc length-index of term in doc)*tf) / doc length
+                            double tfAndIndex = docLength - Double.parseDouble(index.toString());
+                            tfAndIndex = tfAndIndex / docLength;
+                            tfAndIndex *= Double.parseDouble(tf.toString());
+
                             if (tfIndexInDocs.containsKey(docID.toString())) {
                                 double currentWeight = tfIndexInDocs.get(docID.toString());
                                 currentWeight += tfAndIndex;
@@ -121,6 +127,7 @@ public class Ranker {
                                 tfIndexInDocs.put(docID.toString(), tfAndIndex);
                             }
 
+                            //calculate cosine similarity (partial, only numerator)
                             if (weightsInDocs.containsKey(docID.toString())) {
                                 double currentWeight = weightsInDocs.get(docID.toString());
                                 currentWeight += (tfnormal * idf);
@@ -153,6 +160,10 @@ public class Ranker {
         return result;
     }
 
+    /**
+     * sets the indexer member
+     * @param indexer indexer object
+     */
     public void setIndexer(Indexer indexer){this.indexer=indexer;}
 
     private Map<String, Double> sortByValue(Map<String, Double> map) {
@@ -171,6 +182,10 @@ public class Ranker {
         return result;
     }
 
+    /**
+     * path of the posting files
+     * @param loadPath path of posting files
+     */
     public void setLoadPath(String loadPath) {
         this.loadPath = loadPath;
     }

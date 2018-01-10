@@ -19,14 +19,29 @@ public class Searcher {
         regex = Pattern.compile("<top>");
         ranker = new Ranker();
     }
+
+    /**
+     * sets the parser member
+     * @param parse parser object to set
+     */
     public void setParser(Parser parse){
         parser=parse;
     }
+
+    /**
+     * set the indexer object
+     * @param index indexer object to set
+     */
     public void setIndexer(Indexer index){
         ranker.setIndexer(index);
     }
 
 
+    /**
+     * gets the queries from a query file and sends to ranker
+     * @param path path of query file
+     * @return map of query number and list of 50 most relevant doc ids
+     */
     public HashMap<String, List<String>> multipleQueries(String path){
         queryNumbers = new ArrayList();
         queryList=new HashMap<>();
@@ -75,7 +90,11 @@ public class Searcher {
         return results;
     }
 
-    //gets a single query and returns the relevant documents
+    /**
+     * gets a single query and returns the relevant documents
+     * @param query a single query
+     * @return 50 most relevant doc ids
+     */
     public List<String> getRelevantDocs(String query){
 
         parser.termsForQuery.clear();
@@ -86,6 +105,10 @@ public class Searcher {
         return ranker.rank(parsedQuery);
     }
 
+    /**
+     * sets the load path which the posting files are in
+     * @param loadPath path of posting files
+     */
     public void setLoadPath(String loadPath) {
         this.loadPath = loadPath;
     }

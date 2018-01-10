@@ -164,10 +164,23 @@ public class Controller {
      * get query input from user
      */
     public void getQuery(){
+        btn_start.setDisable(true);
+        btn_reset.setDisable(true);
+        browse1.setDisable(true);
+        browse2.setDisable(true);
+        saveResults.setDisable(true);
+        browseResults.setDisable(true);
+        resetall.setDisable(true);
+        browsequerybutton.setDisable(true);
+        executequeries.setDisable(true);
+        executequery.setDisable(true);
+        cacheB.setDisable(true);
+        dictB.setDisable(true);
+        load.setDisable(true);
+        save.setDisable(true);
 
-
+        searcher.queryNumbers = null;
         results.clear();
-       // destinationDirectory="C:/Users/avevanes/Downloads";
         long startTime=System.currentTimeMillis();
         rf.ctrl.setWithStemming(stembox.isSelected());
         rf.ctrl.setPaths(loadPath+"/stop_words.txt",null);  //
@@ -179,12 +192,12 @@ public class Controller {
             ObjectInputStream docWeight;
             ObjectInputStream docLength;
             if(stembox.isSelected()) {
-                docWeight = new ObjectInputStream(new FileInputStream(loadPath + "/" + rf.ctrl.directory + "/docWeightsWithStem.ser"));
-                docLength = new ObjectInputStream(new FileInputStream(loadPath+"/"+rf.ctrl.directory+"/docLengthWithStem.ser"));
+                docWeight = new ObjectInputStream(new FileInputStream(loadPath + "/" +  "/docWeightsWithStem.ser"));
+                docLength = new ObjectInputStream(new FileInputStream(loadPath + "/docLengthWithStem.ser"));
             }
             else{
-                docWeight = new ObjectInputStream(new FileInputStream(loadPath + "/" + rf.ctrl.directory + "/docWeightsNoStem.ser"));
-                docLength = new ObjectInputStream(new FileInputStream(loadPath+"/"+rf.ctrl.directory+"/docLengthNoStem.ser"));
+                docWeight = new ObjectInputStream(new FileInputStream(loadPath +  "/docWeightsNoStem.ser"));
+                docLength = new ObjectInputStream(new FileInputStream(loadPath+"/docLengthNoStem.ser"));
             }
             rf.ctrl.indexer.setDocWeights((HashMap<String,Double>)docWeight.readObject());
             docWeight.close();
@@ -268,10 +281,43 @@ public class Controller {
             alert.setContentText("Enter a query or a document ID");
             alert.show();
         }
+        btn_start.setDisable(false);
+        btn_reset.setDisable(false);
+        browse1.setDisable(false);
+        browse2.setDisable(false);
+        saveResults.setDisable(false);
+        browseResults.setDisable(false);
+        resetall.setDisable(false);
+        browsequerybutton.setDisable(false);
+        executequeries.setDisable(false);
+        executequery.setDisable(false);
+        cacheB.setDisable(false);
+        dictB.setDisable(false);
+        load.setDisable(false);
+        save.setDisable(false);
     }
 
+    /**
+     * run series of queries from a given path and display for each query the 50 most relevant document IDs
+     */
     public void getQueryPath()
     {
+        btn_start.setDisable(true);
+        btn_reset.setDisable(true);
+        browse1.setDisable(true);
+        browse2.setDisable(true);
+        saveResults.setDisable(true);
+        browseResults.setDisable(true);
+        resetall.setDisable(true);
+        browsequerybutton.setDisable(true);
+        executequeries.setDisable(true);
+        executequery.setDisable(true);
+        cacheB.setDisable(true);
+        dictB.setDisable(true);
+        load.setDisable(true);
+        save.setDisable(true);
+
+
         if(loadPath==null || loadPath.equals("")){
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setContentText("Enter a path to load query file from!");
@@ -291,11 +337,11 @@ public class Controller {
                     ObjectInputStream docWeight;
                     ObjectInputStream docLength;
                     if (stembox.isSelected()) {
-                        docWeight = new ObjectInputStream(new FileInputStream(loadPath + "/" + rf.ctrl.directory + "/docWeightsWithStem.ser"));
-                        docLength = new ObjectInputStream(new FileInputStream(loadPath + "/" + rf.ctrl.directory + "/docLengthWithStem.ser"));
+                        docWeight = new ObjectInputStream(new FileInputStream(loadPath + "/" + "/docWeightsWithStem.ser"));
+                        docLength = new ObjectInputStream(new FileInputStream(loadPath + "/" + "/docLengthWithStem.ser"));
                     } else {
-                        docWeight = new ObjectInputStream(new FileInputStream(loadPath + "/" + rf.ctrl.directory + "/docWeightsNoStem.ser"));
-                        docLength = new ObjectInputStream(new FileInputStream(loadPath + "/" + rf.ctrl.directory + "/docLengthNoStem.ser"));
+                        docWeight = new ObjectInputStream(new FileInputStream(loadPath + "/"  + "/docWeightsNoStem.ser"));
+                        docLength = new ObjectInputStream(new FileInputStream(loadPath + "/"  + "/docLengthNoStem.ser"));
                     }
                     rf.ctrl.indexer.setDocWeights((HashMap<String, Double>) docWeight.readObject());
                     docWeight.close();
@@ -349,12 +395,34 @@ public class Controller {
                 alert.setContentText("Please Enter a Valid Path!");
                 alert.show();}
         }
-
+        btn_start.setDisable(false);
+        btn_reset.setDisable(false);
+        browse1.setDisable(false);
+        browse2.setDisable(false);
+        saveResults.setDisable(false);
+        browseResults.setDisable(false);
+        resetall.setDisable(false);
+        browsequerybutton.setDisable(false);
+        executequeries.setDisable(false);
+        executequery.setDisable(false);
+        cacheB.setDisable(false);
+        dictB.setDisable(false);
+        load.setDisable(false);
+        save.setDisable(false);
     }
 
+    /**
+     * save the query results to a file on disk in given path
+     */
     public void saveResults() {
         if (saveResultsPath != null && !saveResultsPath.equals("")) {
             try {
+                File saveFile = new File(saveResultsPath+ ".txt");
+                if (saveFile.exists())
+                {
+                    saveFile.delete();
+                }
+
                 PrintWriter writer = new PrintWriter(saveResultsPath + ".txt", "UTF-8");
                 if (searcher.queryNumbers == null) {
                     for (String docid : results.get("0")) {
@@ -385,7 +453,7 @@ public class Controller {
     }
 
     /**
-     * opens a directory chooser to select the directory to save the posting files in
+     * opens a directory chooser to select the directory to save the query results in
      */
     public void browseSaveResults(){
         try {
@@ -492,9 +560,6 @@ public class Controller {
      * the files names that are read from are according to the stem checkbox selection
      */
     public void load(){
-        //  Platform.runLater(new Runnable(){
-        //    @Override
-        //    public void run() {
         try {
             String cachepath;
             String dict;
@@ -527,7 +592,6 @@ public class Controller {
             alert.setContentText("Please Enter a Valid Path");
             alert.show();;
         }
-        //    }});
     }
 
 
@@ -582,12 +646,6 @@ public class Controller {
                         output.close();
                     }catch (Exception e){}
 
-                  /*  Searcher searcher = new Searcher();
-                    searcher.parser=rf.ctrl.parser;
-                    searcher.indexer=rf.ctrl.indexer;
-                    searcher.parser.setIsQuery(true);
-                    searcher.getRelevantDocs("Newspapers in the Former Yugoslav Republic of Macedonia");*/
-                    //saveDictTxt();
 
                     //enable buttons
                     btn_start.setDisable(false);
@@ -625,42 +683,9 @@ public class Controller {
 
 
             }});
-        //thread.start();
-       /* try {
-            thread.join();
-        }*/
-       /* catch (InterruptedException e){
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setContentText("File Path Invalid");
-            alert.show();
-        }*/
-     /*   Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setContentText("Indexing Process has Completed");
-        alert.show();*/
     }
 
-    public void saveDictForZipf(){
-        try {
 
-            PrintWriter writerzipf = new PrintWriter(destinationDirectory + "/zipf.txt", "UTF-8");
-            PrintWriter writertxt = new PrintWriter(destinationDirectory + "/dictext.txt", "UTF-8");
-            HashMap<String,TermInDictionairy> dict = rf.ctrl.indexer.dictionairy;
-            for(TermInDictionairy tid : dict.values()){
-                writerzipf.println(tid.term+","+tid.totalOccurencesInCorpus);
-                writertxt.println(tid.toString());
-            }
-            SortedSet<String> sortedKeys = new TreeSet<String>(dict.keySet());
-
-            ObservableList<String> items= FXCollections.observableArrayList();
-            int counter=1;
-            for (String term : sortedKeys) {
-                StringBuilder TermDetails = new StringBuilder();
-                items.add(term+","+dict.get(term).getTotalOccurencesInCorpus());
-                counter++;
-            }
-
-        }catch (Exception e){}
-    }
     /**
      * saves the cache from the last run into a serializable file - later used to calculate its size
      */
@@ -765,6 +790,9 @@ public class Controller {
 
     }
 
+    /**
+     * resets the memory, and if there is a results file in disk - delete it
+     */
     public void resetAll(){
 
         if(saveResultsPath!=null) {
@@ -785,6 +813,16 @@ public class Controller {
             this.results = new HashMap<>();
             loadPath="";
             saveResultsPath="";
+
+            //delete paths is gui
+            saveResultstxt.clear();
+            singlequery.clear();
+            browsequery.clear();
+            corpBrowse.clear();
+            destBrowse.clear();
+            loadtxt.clear();
+            savetxt.clear();
+
 
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setContentText("Reset has been Completed");

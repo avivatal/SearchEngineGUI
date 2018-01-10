@@ -13,10 +13,7 @@ public class Indexer {
     Cache cache;
     String destinationDirectory; //directory of the stem/noStem directory
     String directory;   //stem/noStem directory
-
-
     HashMap<String, Double> docWeights;
-
     HashMap<String, Integer> docLengths;
     int numOfDocsInCorpus;
 
@@ -27,20 +24,6 @@ public class Indexer {
 
     }
 
-    public void setDocWeights(HashMap<String, Double> docWeights) {
-        this.docWeights = docWeights;
-    }
-
-    public void setDocLengths(HashMap<String, Integer> docLengths) {
-        this.docLengths = docLengths;
-        numOfDocsInCorpus=docLengths.size();
-    }
-    public HashMap<String, Integer> getDocLengths() {
-        return docLengths;
-    }
-    public HashMap<String, Double> getDocWeights() {
-        return docWeights;
-    }
 
     /**
      * sets the directory of the stem/noStem directory
@@ -147,7 +130,6 @@ public class Indexer {
 
         //merge levels iterations
         for(int i=1; i<iterations; i++){
-            System.out.println("end: "+end+" iteratons: "+iterations+" start: "+start);
             //last merge - merge into alphabetical files
             if(end-start==1){
                 mergeAlphabetic(start, end);
@@ -221,8 +203,6 @@ public class Indexer {
                         writer.flush();
                     }
                 }catch (StringIndexOutOfBoundsException e) {
-                    System.out.println(line1);
-                    System.out.printf(line2);
                 }
 
                 //if reached the end of only one of the files - write the rest of the other file
@@ -418,6 +398,10 @@ public class Indexer {
         }
     }
 
+    /**
+     * calcuates the weight of each document by calculating the weight of each term in if (tf*idf)^2, and summing all term weights.
+     * @param postingLine the posting line which the term is calculated for
+     */
     public void calcDocWeight(String postingLine)
     {
         String term = postingLine.substring(0,postingLine.indexOf(':'));
@@ -464,6 +448,10 @@ public class Indexer {
         }
     }
 
+
+    /**
+     * calculate the average document length and write to txt file in disk
+     */
     public void calcAvgLength(){
         double sum=0;
         for(int length : docLengths.values()){
@@ -478,6 +466,40 @@ public class Indexer {
             avglenWriter.close();
         }catch(Exception e){}
 
+    }
+
+    /**
+     * sets the member that holds all the documents weights.
+     * @param docWeights map of document ID and its weight
+     */
+    public void setDocWeights(HashMap<String, Double> docWeights) {
+        this.docWeights = docWeights;
+    }
+
+
+    /**
+     * sets the member that holds all the documents lengths.
+     * @param docLengths map of document ID and its length
+     */
+    public void setDocLengths(HashMap<String, Integer> docLengths) {
+        this.docLengths = docLengths;
+        numOfDocsInCorpus=docLengths.size();
+    }
+
+    /**
+     * gets the member that holds all the documents lengths.
+     * @return map of document ID and its length
+     */
+    public HashMap<String, Integer> getDocLengths() {
+        return docLengths;
+    }
+
+    /**
+     * gets the member that holds all the documents weights.
+     * @return map of document ID and its weight
+     */
+    public HashMap<String, Double> getDocWeights() {
+        return docWeights;
     }
 
 }

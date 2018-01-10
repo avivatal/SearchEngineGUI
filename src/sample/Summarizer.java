@@ -14,11 +14,17 @@ public class Summarizer {
     public Summarizer(){
         parser=new Parser();
     }
+
+    /**
+     *summarizes a document to the 5 most important sentences which have the highest average tf. reads the document and extracts its text. sends to docSummary method to rank sentences.
+     * @param docname document ID which needs to be summarized
+     * @return list of 5 most important sentences.
+     */
     public ArrayList<String> readFile(String docname) {
 
         ArrayList<String> newArrayList=null;
         try {
-            String docpath = loadPath + "/" + directory + "/documents.txt";
+            String docpath = loadPath + "/documents.txt";
             BufferedReader br = new BufferedReader(new FileReader(docpath));
             String aux = "";
             while ((aux = br.readLine()) != null) {
@@ -36,7 +42,7 @@ public class Summarizer {
             String filetxt = "";
             try {
                 while ((filetxt = docReader.readLine()) != null) {
-                    builder.append(filetxt);
+                    builder.append(filetxt+" ");
                 }
                 br.close();
 
@@ -68,11 +74,17 @@ public class Summarizer {
         return newArrayList;
     }
 
+
+    /**
+     * gets text of duc and sends to parser.
+     * @param document document text
+     * @return 5 sentences in text with highest avg tf value.
+     */
     public ArrayList<String> docSummary(String document){
 
         parser.setDocSummary(true);
         parser.setIsQuery(true);
-        String[] sentences = document.split("\\. ");
+        String[] sentences = document.split("\\. |\\.\n");
         //check for sentences that shouldn't be splited
 
 
@@ -141,6 +153,11 @@ public class Summarizer {
         return result;
     }
 
+    /**
+     * sorts map by value (largest to smallest)
+     * @param map map to be sorted by double comparator.
+     * @return sorted map.
+     */
     private Map<String, Double> sortByValue(Map<String, Double> map) {
         List<Map.Entry<String, Double>> list = new LinkedList<>(map.entrySet());
         Collections.sort(list, new Comparator<Map.Entry<String, Double>>() {
@@ -157,10 +174,19 @@ public class Summarizer {
         return result;
     }
 
+    /**
+     * path where the posting files are
+     * @param path path of posting files
+     */
     public void setLoadPath(String path){
         loadPath=path;
     }
 
+
+    /**
+     * sets whether with stem or without
+     * @param b true if with stemming
+     */
     public void setWithStemming(boolean b){
         if(b){
             directory="withStem";
