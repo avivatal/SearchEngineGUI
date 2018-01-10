@@ -103,7 +103,6 @@ public class ReadFile
             }
             //sends to control to parse and index
             ctrl.control(documents);
-            System.out.println("done "+counter);
         }
         //all files have been indexed, initializes cache calculation
         ctrl.calcCache();
